@@ -1,0 +1,31 @@
+# Web framework
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+
+# Database
+sqlalchemy==2.0.36
+psycopg[binary]
+geoalchemy2==0.16.0
+
+# Data validation
+pydantic==2.10.3
+pydantic-settings==2.7.0
+
+# Scraping
+playwright==1.49.1
+playwright-stealth==1.0.6
+
+# Image deduplication
+imagehash==4.3.1
+Pillow==11.0.0
+httpx==0.28.1
+
+# Financial calculations
+numpy-financial==1.0.0
+
+# Excel export
+openpyxl==3.1.5
+
+# Utilities
+python-dotenv==1.0.1
+asyncio-throttle==1.0.2
