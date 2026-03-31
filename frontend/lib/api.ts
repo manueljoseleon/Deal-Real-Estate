@@ -1,9 +1,14 @@
 import type {
   PropertyListResponse,
   PropertyDetail,
+  MapPinItem,
   RentalCompItem,
   CommuneSummary,
   ScrapeRun,
+  MarketStatsResponse,
+  TimeOnMarketResponse,
+  YieldMatrixResponse,
+  StockConcentrationResponse,
 } from "@/types";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
@@ -50,6 +55,18 @@ export interface ListPropertiesParams {
   page_size?: number;
 }
 
+// Subset of filters relevant to the map (no sort/page)
+export interface MapPinsParams {
+  commune?: string[];
+  property_type?: string;
+  min_yield?: number;
+  max_yield?: number;
+  min_price?: number;
+  max_price?: number;
+  bedrooms?: number;
+  portal?: string;
+}
+
 export const api = {
   properties: {
     list: (params: ListPropertiesParams) =>
@@ -60,14 +77,64 @@ export const api = {
 
     comps: (id: string) =>
       get<RentalCompItem[]>(`/properties/${id}/comps`),
+
+    mapPins: (params: MapPinsParams) =>
+      get<MapPinItem[]>("/properties/map-pins", params as Record<string, string | string[] | number | boolean | undefined>),
+
+    pendingReview: (page = 1, page_size = 50) =>
+      get<PropertyListResponse>("/properties/pending-review", { page, page_size }),
+
+    patch: (id: string, body: { useful_area_m2?: number | null; total_area_m2?: number | null; lat?: number | null; lng?: number | null }) =>
+      fetch(`${BASE}/properties/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+        cache: "no-store",
+      }).then(async (r) => {
+        if (!r.ok) throw new Error(`API error ${r.status}`);
+        return r.json() as Promise<import("@/types").PropertyDetail>;
+      }),
   },
 
   analysis: {
     summary: () =>
       get<CommuneSummary[]>("/analysis/summary"),
 
+    ufValue: () =>
+      get<{ uf_clp: number; date: string }>("/analysis/uf"),
+
     recalculate: () =>
       post<{ message: string }>("/analysis/recalculate", {}),
+  },
+
+  mercado: {
+    stats: (params?: {
+      commune?: string[];
+      property_type?: string;
+      bedrooms?: string | number;
+      min_price?: number;
+      max_price?: number;
+    }) =>
+      get<MarketStatsResponse>("/mercado/stats", params as Record<string, string | string[] | number | boolean | undefined>),
+
+    timeOnMarket: (params?: {
+      commune?: string[];
+      property_type?: string;
+      bedrooms?: string | number;
+    }) =>
+      get<TimeOnMarketResponse>("/mercado/time-on-market", params as Record<string, string | string[] | number | boolean | undefined>),
+
+    yieldMatrix: (params?: {
+      commune?: string[];
+      property_type?: string;
+    }) =>
+      get<YieldMatrixResponse>("/mercado/yield-matrix", params as Record<string, string | string[] | number | boolean | undefined>),
+
+    stockConcentration: (params?: {
+      commune?: string[];
+      property_type?: string;
+    }) =>
+      get<StockConcentrationResponse>("/mercado/stock-concentration", params as Record<string, string | string[] | number | boolean | undefined>),
   },
 
   scraper: {

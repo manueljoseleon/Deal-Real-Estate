@@ -33,6 +33,8 @@ def estimate_rent_from_comps(rent_values: list[int]) -> dict:
         }
 
     sorted_rents = sorted(rent_values)
+    # statistics.median returns the average of the two middle values for even-length lists,
+    # so the 2-comp case is handled correctly without special-casing.
     return {
         "estimated_monthly_rent_clp": int(median(sorted_rents)),
         "rent_median_clp": int(median(sorted_rents)),
@@ -60,6 +62,11 @@ def calculate_btl_summary(
         if estimated_rent
         else None
     )
+    # Sanity cap: yields above 50% are almost certainly bad data
+    # (e.g. a bodega/parking misclassified as apartment, or absurd price)
+    if gross_yield is not None and gross_yield > 50:
+        gross_yield = None
+        estimated_rent = None
 
     price_per_m2 = (
         int(price_clp / useful_area_m2)

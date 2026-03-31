@@ -17,65 +17,79 @@ export default function PropertyTable({ items }: Props) {
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-gray-200">
-      <table className="w-full text-sm">
-        <thead className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide">
-          <tr>
-            <th className="px-4 py-3 text-left">Propiedad</th>
-            <th className="px-4 py-3 text-right">Precio</th>
-            <th className="px-4 py-3 text-right">Área</th>
-            <th className="px-4 py-3 text-right">Dorm.</th>
-            <th className="px-4 py-3 text-right">Renta est.</th>
-            <th className="px-4 py-3 text-center">Yield</th>
-            <th className="px-4 py-3 text-left">Portal</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-100">
-          {items.map((p) => (
-            <tr key={p.id} className="hover:bg-gray-50 transition-colors">
-              <td className="px-4 py-3 max-w-xs">
-                <Link href={`/properties/${p.id}`} className="hover:text-blue-600">
-                  <p className="font-medium text-gray-900 truncate leading-tight">
-                    {p.title ?? p.external_id}
-                  </p>
-                  <p className="text-xs text-gray-400 mt-0.5">
-                    {p.commune}{p.neighborhood ? ` · ${p.neighborhood}` : ""}
-                  </p>
-                </Link>
-              </td>
-              <td className="px-4 py-3 text-right tabular-nums">
-                <p className="font-semibold text-gray-900">{formatUF(p.price_uf)}</p>
-                <p className="text-xs text-gray-400">{formatCLP(p.price_clp)}</p>
-              </td>
-              <td className="px-4 py-3 text-right tabular-nums text-gray-700">
-                {formatArea(p.useful_area_m2)}
-              </td>
-              <td className="px-4 py-3 text-right text-gray-700">
-                {p.bedrooms ?? "—"}
-              </td>
-              <td className="px-4 py-3 text-right tabular-nums text-gray-700">
-                {p.btl?.estimated_monthly_rent_clp
-                  ? formatCLP(p.btl.estimated_monthly_rent_clp)
-                  : "—"}
-                {p.btl?.comparable_rent_count != null && (
-                  <p className="text-xs text-gray-400">{p.btl.comparable_rent_count} comp.</p>
-                )}
-              </td>
-              <td className="px-4 py-3 text-center">
-                <YieldBadge
-                  yield_pct={p.btl?.gross_yield_pct}
-                  band={p.btl?.yield_band ?? null}
-                />
-              </td>
-              <td className="px-4 py-3 text-xs text-gray-500">
-                <a href={p.url} target="_blank" rel="noopener noreferrer" className="hover:text-blue-600 hover:underline">
-                  {formatPortal(p.portal)}
-                </a>
-              </td>
+    <div className="space-y-2">
+      <h2 className="text-sm font-semibold text-gray-700">Propiedades en venta</h2>
+      <div className="overflow-x-auto rounded-lg border border-gray-200">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide">
+            <tr>
+              <th className="px-4 py-3 text-left">Propiedad</th>
+              <th className="px-4 py-3 text-right">Precio</th>
+              <th className="px-4 py-3 text-right">Precio/m²</th>
+              <th className="px-4 py-3 text-right">Área</th>
+              <th className="px-4 py-3 text-right">Dorm.</th>
+              <th className="px-4 py-3 text-right">Renta est.</th>
+              <th className="px-4 py-3 text-center">Cap Rate</th>
+              <th className="px-4 py-3 text-left">Portal</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {items.map((p) => (
+              <tr key={p.id} className="hover:bg-gray-50 transition-colors">
+                <td className="px-4 py-3 max-w-xs">
+                  <Link href={`/properties/${p.id}`} className="hover:text-blue-600">
+                    <p className="font-medium text-gray-900 truncate leading-tight">
+                      {p.title ?? p.external_id}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      {p.commune}{p.neighborhood ? ` · ${p.neighborhood}` : ""}
+                    </p>
+                  </Link>
+                </td>
+                <td className="px-4 py-3 text-right tabular-nums">
+                  <p className="font-semibold text-gray-900">{formatUF(p.price_uf)}</p>
+                  <p className="text-xs text-gray-400">{formatCLP(p.price_clp)}</p>
+                </td>
+                {/* Precio/m²: UF/m² primary, CLP/m² secondary */}
+                <td className="px-4 py-3 text-right tabular-nums text-gray-600">
+                  {p.price_uf_per_m2 != null ? (
+                    <>
+                      <p>UF {p.price_uf_per_m2.toFixed(1)}</p>
+                      {p.price_per_m2_clp != null && (
+                        <p className="text-xs text-gray-400">{formatCLP(p.price_per_m2_clp)}</p>
+                      )}
+                    </>
+                  ) : (
+                    <span className="text-gray-300">—</span>
+                  )}
+                </td>
+                <td className="px-4 py-3 text-right tabular-nums text-gray-700">
+                  {formatArea(p.useful_area_m2)}
+                </td>
+                <td className="px-4 py-3 text-right text-gray-700">
+                  {p.bedrooms ?? "—"}
+                </td>
+                <td className="px-4 py-3 text-right tabular-nums text-gray-700">
+                  {p.btl?.estimated_monthly_rent_clp
+                    ? formatCLP(p.btl.estimated_monthly_rent_clp)
+                    : "—"}
+                </td>
+                <td className="px-4 py-3 text-center">
+                  <YieldBadge
+                    yield_pct={p.btl?.gross_yield_pct}
+                    band={p.btl?.yield_band ?? null}
+                  />
+                </td>
+                <td className="px-4 py-3 text-xs text-gray-500">
+                  <a href={p.url} target="_blank" rel="noopener noreferrer" className="hover:text-blue-600 hover:underline">
+                    {formatPortal(p.portal)}
+                  </a>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

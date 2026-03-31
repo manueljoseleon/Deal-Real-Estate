@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import type { ScrapeRun } from "@/types";
 import Link from "next/link";
+import AdminGate from "@/components/AdminGate";
 
 const COMMUNES = ["Providencia", "Las Condes", "Ñuñoa", "Santiago", "Vitacura", "San Miguel"];
 const PORTALS = ["portal_inmobiliario", "toctoc"];
@@ -75,6 +76,7 @@ export default function ScraperPage() {
   const hasRunning = runs.some((r) => r.status === "running");
 
   return (
+    <AdminGate>
     <main className="max-w-4xl mx-auto px-4 py-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
@@ -195,5 +197,6 @@ export default function ScraperPage() {
         )}
       </div>
     </main>
+    </AdminGate>
   );
 }

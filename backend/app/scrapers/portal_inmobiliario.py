@@ -166,6 +166,7 @@ class PortalInmobiliarioScraper(BaseScraper):
         price_clp: Optional[float] = None
         price_uf: Optional[float] = None
         title: Optional[str] = None
+        description: Optional[str] = None
         images: list[str] = []
 
         try:
@@ -177,6 +178,8 @@ class PortalInmobiliarioScraper(BaseScraper):
             for block in (jsonld_blocks or []):
                 if block.get("@type") == "Product":
                     title = block.get("name")
+                    if block.get("description"):
+                        description = block["description"].strip() or None
                     offers = block.get("offers") or {}
                     raw_price = offers.get("price")
                     # Portal Inmobiliario uses "CLF" (ISO 4217 for UF), not "UF"
@@ -231,6 +234,28 @@ class PortalInmobiliarioScraper(BaseScraper):
                     attrs["dormitorios"] = m_bed.group(1)
                 if m_bath and "baños" not in attrs:
                     attrs["baños"] = m_bath.group(1)
+            except Exception:
+                pass
+
+        # --- 3b. Description fallback: DOM selector ---
+        if not description:
+            try:
+                description = await page.evaluate("""
+                    () => {
+                        const sel = [
+                            '[class*="description"] p',
+                            '[class*="descripcion"] p',
+                            '[data-testid*="description"]',
+                            '.ui-pdp-description__content',
+                        ];
+                        for (const s of sel) {
+                            const el = document.querySelector(s);
+                            if (el && el.textContent.trim().length > 20)
+                                return el.textContent.trim();
+                        }
+                        return null;
+                    }
+                """) or None
             except Exception:
                 pass
 
@@ -394,7 +419,7 @@ class PortalInmobiliarioScraper(BaseScraper):
             "url": url,
             "listing_type": listing_type,
             "title": title,
-            "description": None,
+            "description": description,
             "property_type": "apartment",
             "bedrooms": bedrooms,
             "bathrooms": self.parse_int(attrs.get("baños")),

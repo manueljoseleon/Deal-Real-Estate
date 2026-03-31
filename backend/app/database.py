@@ -29,7 +29,7 @@ def get_db():
 
 def init_db() -> None:
     """Create all tables and enable PostGIS + pg_trgm extensions."""
-    from backend.app.models import Property, RentalComp, ScrapeRun, PropertyCluster, ImageHash, DealAnalysis  # noqa: F401
+    from backend.app.models import Property, RentalComp, ScrapeRun, PropertyCluster, ImageHash, DealAnalysis, PropertyPriceSnapshot  # noqa: F401
 
     # 1. Extensions
     with engine.connect() as conn:
@@ -66,4 +66,19 @@ def init_db() -> None:
                 END IF;
             END $$;
         """))
+        conn.commit()
+
+    # 4. Performance indexes (idempotent — IF NOT EXISTS)
+    with engine.connect() as conn:
+        # properties — most queries filter on (is_canonical, is_active) first
+        conn.execute(text("CREATE INDEX IF NOT EXISTS idx_prop_active ON properties (is_canonical, is_active)"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS idx_prop_commune ON properties (commune)"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS idx_prop_yield ON properties (gross_yield_pct DESC NULLS LAST)"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS idx_prop_type_beds ON properties (property_type, bedrooms)"))
+        # Spatial index for ST_DWithin / ST_Distance on sale listings
+        conn.execute(text("CREATE INDEX IF NOT EXISTS idx_prop_location ON properties USING GIST (location)"))
+        # rental_comps — comps matching queries filter commune+type, plus spatial
+        conn.execute(text("CREATE INDEX IF NOT EXISTS idx_rc_active ON rental_comps (is_canonical, is_active)"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS idx_rc_commune_type ON rental_comps (commune, property_type)"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS idx_rc_location ON rental_comps USING GIST (location)"))
         conn.commit()

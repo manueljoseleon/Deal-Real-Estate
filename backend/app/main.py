@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from backend.app.config import settings
 from backend.app.database import init_db
-from backend.app.api import properties, analysis, scraper
+from backend.app.api import properties, analysis, scraper, mercado
 
 
 @asynccontextmanager
@@ -30,6 +30,7 @@ app.add_middleware(
 app.include_router(properties.router, prefix="/api/v1")
 app.include_router(analysis.router, prefix="/api/v1")
 app.include_router(scraper.router, prefix="/api/v1")
+app.include_router(mercado.router, prefix="/api/v1")
 
 
 @app.get("/health")

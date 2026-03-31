@@ -44,6 +44,12 @@ class PropertyListItem(BaseModel):
     price_clp: Optional[int]
     price_uf: Optional[float]
     price_per_m2_clp: Optional[int]
+    price_uf_per_m2: Optional[float]
+    zone_avg_price_uf_per_m2: Optional[float] = None
+    zone_avg_price_uf_per_m2_same_type: Optional[float] = None
+    zone_avg_sample_count: Optional[int] = None
+    lat: Optional[float] = None
+    lng: Optional[float] = None
     commune: Optional[str]
     neighborhood: Optional[str]
     hoa_fee_clp: Optional[int]
@@ -61,8 +67,6 @@ class PropertyDetail(PropertyListItem):
     floor: Optional[int]
     parking: Optional[bool]
     storage: Optional[bool]
-    lat: Optional[float]
-    lng: Optional[float]
     region: Optional[str]
     contributions_clp_annual: Optional[int]
     first_seen_at: datetime
@@ -75,6 +79,17 @@ class PropertyListResponse(BaseModel):
     page: int
     page_size: int
     total_pages: int
+
+
+class MapPinItem(BaseModel):
+    """Lightweight property representation for the dashboard map — all filtered results up to cap."""
+    id: UUID
+    lat: float
+    lng: float
+    yield_band: Optional[str] = None   # excellent | good | moderate | weak
+    price_uf: Optional[float] = None
+    commune: Optional[str] = None
+    bedrooms: Optional[int] = None
 
 
 class RentalCompItem(BaseModel):
@@ -91,6 +106,9 @@ class RentalCompItem(BaseModel):
     price_per_m2_clp: Optional[int]
     lat: Optional[float]
     lng: Optional[float]
-    distance_m: Optional[int] = None   # metres from the sale property (None = commune fallback)
+    distance_m: Optional[int] = None          # metres from the sale property (None = commune fallback)
+    normalized_rent_clp: Optional[int] = None  # rent scaled to sale property m2 via $/m2 normalization
+    rent_per_m2_clp: Optional[int] = None      # raw rent per m2 (for F7 table column)
+    rent_per_m2_uf: Optional[float] = None     # raw rent per m2 in UF (for F7 table column)
 
     model_config = {"from_attributes": True}

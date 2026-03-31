@@ -55,6 +55,9 @@ class Property(Base):
     price_per_m2_clp = Column(BigInteger)
     price_per_m2_uf = Column(Numeric(10, 4))   # price_uf / useful_area_m2
     matching_tier = Column(SmallInteger)       # 1=tightest geo, 6=commune fallback
+    zone_avg_price_uf_per_m2 = Column(Numeric(10, 2))       # avg UF/m2 of nearby sale properties
+    zone_avg_price_uf_per_m2_same_type = Column(Numeric(10, 2))  # avg UF/m2 same bedrooms+area within 1.5km
+    zone_avg_sample_count = Column(SmallInteger)             # number of properties used for zone_avg
 
     # Deduplication
     cluster_id = Column(UUID(as_uuid=True), ForeignKey("property_clusters.id"), nullable=True)

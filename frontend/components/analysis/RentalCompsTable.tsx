@@ -1,11 +1,41 @@
-import type { RentalCompItem } from "@/types";
+"use client";
+
+import { useState } from "react";
+import dynamic from "next/dynamic";
+import type { RentalCompItem, BTLAnalysis } from "@/types";
 import { formatCLP, formatUF, formatArea, formatPortal } from "@/lib/formatters";
+
+// Leaflet accesses window — load only on the client, no SSR
+const CompsMap = dynamic(() => import("./CompsMap"), { ssr: false });
 
 interface Props {
   comps: RentalCompItem[];
+  btl?: BTLAnalysis | null;
+  propertyLat?: number | null;
+  propertyLng?: number | null;
 }
 
-export default function RentalCompsTable({ comps }: Props) {
+export default function RentalCompsTable({ comps, btl, propertyLat, propertyLng }: Props) {
+  const [view, setView] = useState<"list" | "map">("list");
+
+  // Find the comp whose normalized_rent_clp is closest to the stored median estimate
+  const estimatedRent = btl?.estimated_monthly_rent_clp;
+  let medianCompId: string | null = null;
+  if (estimatedRent != null) {
+    let minDiff = Infinity;
+    for (const c of comps) {
+      const rent = c.normalized_rent_clp ?? c.rent_clp;
+      if (rent == null) continue;
+      const diff = Math.abs(rent - estimatedRent);
+      if (diff < minDiff) {
+        minDiff = diff;
+        medianCompId = c.id;
+      }
+    }
+  }
+
+  const canShowMap = propertyLat != null && propertyLng != null;
+
   if (comps.length === 0) {
     return (
       <div className="text-center py-8 text-sm text-gray-400">
@@ -16,60 +46,135 @@ export default function RentalCompsTable({ comps }: Props) {
 
   return (
     <div className="space-y-2">
-      <h2 className="font-semibold text-gray-800">Arriendos comparables</h2>
-      <div className="overflow-x-auto rounded-lg border border-gray-200">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide">
-            <tr>
-              <th className="px-3 py-2 text-left">Ubicación</th>
-              <th className="px-3 py-2 text-right">Área</th>
-              <th className="px-3 py-2 text-right">Dorm.</th>
-              <th className="px-3 py-2 text-right">Arriendo</th>
-              <th className="px-3 py-2 text-right">Distancia</th>
-              <th className="px-3 py-2 text-left">Portal</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {comps.map((c) => (
-              <tr key={c.id} className="hover:bg-gray-50">
-                <td className="px-3 py-2 text-gray-700">
-                  {c.neighborhood ?? c.commune}
-                  {c.neighborhood && (
-                    <span className="text-xs text-gray-400 ml-1">({c.commune})</span>
-                  )}
-                </td>
-                <td className="px-3 py-2 text-right tabular-nums text-gray-600">
-                  {formatArea(c.useful_area_m2)}
-                </td>
-                <td className="px-3 py-2 text-right text-gray-600">
-                  {c.bedrooms ?? "—"}
-                </td>
-                <td className="px-3 py-2 text-right tabular-nums">
-                  <p className="font-medium text-gray-900">{formatCLP(c.rent_clp)}</p>
-                  <p className="text-xs text-gray-400">{formatUF(c.rent_uf, 1)}</p>
-                </td>
-                <td className="px-3 py-2 text-right tabular-nums text-gray-500 text-xs">
-                  {c.distance_m == null
-                    ? <span className="text-gray-300">—</span>
-                    : c.distance_m >= 1000
-                      ? `${(c.distance_m / 1000).toFixed(1)} km`
-                      : `${c.distance_m} m`}
-                </td>
-                <td className="px-3 py-2 text-xs">
-                  <a
-                    href={c.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline"
-                  >
-                    {formatPortal(c.portal)}
-                  </a>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {/* Header with list/map toggle */}
+      <div className="flex items-center justify-between">
+        <h2 className="font-semibold text-gray-800">Arriendos comparables</h2>
+        {canShowMap && (
+          <div className="flex rounded-md border border-gray-200 overflow-hidden text-xs">
+            <button
+              onClick={() => setView("list")}
+              className={`px-3 py-1.5 transition-colors ${
+                view === "list"
+                  ? "bg-gray-800 text-white"
+                  : "bg-white text-gray-500 hover:bg-gray-50"
+              }`}
+            >
+              ≡ Lista
+            </button>
+            <button
+              onClick={() => setView("map")}
+              className={`px-3 py-1.5 transition-colors border-l border-gray-200 ${
+                view === "map"
+                  ? "bg-gray-800 text-white"
+                  : "bg-white text-gray-500 hover:bg-gray-50"
+              }`}
+            >
+              ⊙ Mapa
+            </button>
+          </div>
+        )}
       </div>
+
+      {/* Map view */}
+      {view === "map" && canShowMap && (
+        <CompsMap
+          comps={comps}
+          propertyLat={propertyLat!}
+          propertyLng={propertyLng!}
+          medianCompId={medianCompId}
+        />
+      )}
+
+      {/* List view */}
+      {view === "list" && (
+        <div className="rounded-lg border border-gray-200 overflow-hidden">
+          <div className="max-h-[360px] overflow-y-auto overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide sticky top-0 z-10">
+              <tr>
+                <th className="px-2 py-2 text-center w-6">#</th>
+                <th className="px-2 py-2 text-left w-28">Ubicación</th>
+                <th className="px-2 py-2 text-right">Área</th>
+                <th className="px-2 py-2 text-right">Dorm.</th>
+                <th className="px-2 py-2 text-right">Arriendo</th>
+                <th className="px-2 py-2 text-right">$/m²</th>
+                <th className="px-2 py-2 text-right">Dist.</th>
+                <th className="px-2 py-2 text-left">Portal</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {comps.map((c, i) => {
+                return (
+                  <tr key={c.id} className="hover:bg-gray-50">
+                    <td className="px-2 py-2 text-center text-xs text-gray-400 tabular-nums">
+                      {i + 1}
+                    </td>
+                    <td className="px-2 py-2 text-gray-700 max-w-[7rem]">
+                      <p className="truncate text-xs" title={c.neighborhood ?? c.commune ?? ""}>
+                        {c.neighborhood ?? c.commune}
+                      </p>
+                      {c.neighborhood && (
+                        <p className="truncate text-xs text-gray-400" title={c.commune ?? ""}>{c.commune}</p>
+                      )}
+                    </td>
+                    <td className="px-2 py-2 text-right tabular-nums text-gray-600 text-xs">
+                      {formatArea(c.useful_area_m2)}
+                    </td>
+                    <td className="px-2 py-2 text-right text-gray-600 text-xs">
+                      {c.bedrooms ?? "—"}
+                    </td>
+                    <td className="px-2 py-2 text-right tabular-nums">
+                      <p className="text-xs font-medium text-gray-900">
+                        {formatCLP(c.rent_clp)}
+                      </p>
+                      <p className="text-xs text-gray-400">{formatUF(c.rent_uf, 1)}</p>
+                    </td>
+                    <td className="px-2 py-2 text-right tabular-nums">
+                      {c.rent_per_m2_clp != null ? (
+                        <>
+                          <p className="text-xs font-medium text-gray-900">
+                            {formatCLP(c.rent_per_m2_clp)}/m²
+                          </p>
+                          {c.rent_per_m2_uf != null && (
+                            <p className="text-xs text-gray-400">
+                              UF {c.rent_per_m2_uf.toLocaleString("es-CL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/m²
+                            </p>
+                          )}
+                        </>
+                      ) : (
+                        <span className="text-xs text-gray-300">—</span>
+                      )}
+                    </td>
+                    <td className="px-2 py-2 text-right tabular-nums text-gray-500 text-xs">
+                      {c.distance_m == null
+                        ? <span className="text-gray-300">—</span>
+                        : c.distance_m >= 1000
+                          ? `${(c.distance_m / 1000).toFixed(1)} km`
+                          : `${c.distance_m} m`}
+                    </td>
+                    <td className="px-2 py-2 text-xs">
+                      <a
+                        href={c.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline"
+                      >
+                        {formatPortal(c.portal)}
+                      </a>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          <p className="text-xs text-gray-400 px-4 py-2 bg-gray-50 border-t border-gray-100">
+            Arriendos comparables se ajustan al tamaño de la propiedad en venta
+          </p>
+          </div>
+        </div>
+      )}
+
+
     </div>
   );
 }

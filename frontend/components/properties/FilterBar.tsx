@@ -4,13 +4,14 @@ import { useQueryStates, parseAsString, parseAsArrayOf, parseAsInteger, parseAsF
 
 const COMMUNES = ["Providencia", "Las Condes", "Ñuñoa", "Santiago", "Vitacura", "San Miguel"];
 const SORT_OPTIONS = [
-  { value: "yield_desc",       label: "Mayor yield" },
+  { value: "yield_desc",       label: "Mayor Cap Rate" },
   { value: "price_asc",        label: "Menor precio" },
   { value: "price_desc",       label: "Mayor precio" },
   { value: "price_per_m2_asc", label: "Menor UF/m²" },
   { value: "last_seen_desc",   label: "Más reciente" },
 ];
 
+// `page` intentionally excluded — infinite scroll manages page as local state
 export const filterParsers = {
   commune:       parseAsArrayOf(parseAsString).withDefault([]),
   property_type: parseAsString.withDefault(""),
@@ -20,7 +21,6 @@ export const filterParsers = {
   min_price:     parseAsInteger.withDefault(0),
   max_price:     parseAsInteger.withDefault(0),
   sort_by:       parseAsString.withDefault("yield_desc"),
-  page:          parseAsInteger.withDefault(1),
 };
 
 export function useFilters() {
@@ -33,23 +33,23 @@ export default function FilterBar() {
   function toggleCommune(c: string) {
     const current = filters.commune;
     const next = current.includes(c) ? current.filter((x) => x !== c) : [...current, c];
-    setFilters({ commune: next, page: 1 });
+    setFilters({ commune: next });
   }
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-4">
       {/* Communes */}
       <div>
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Comuna</p>
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2" style={{ fontFamily: "var(--font-josefin)" }}>Comuna</p>
         <div className="flex flex-wrap gap-2">
           {COMMUNES.map((c) => (
             <button
               key={c}
               onClick={() => toggleCommune(c)}
-              className={`px-3 py-1 rounded-full text-sm border transition-colors ${
+              className={`px-3 py-1 rounded-full text-sm border cursor-pointer transition-colors ${
                 filters.commune.includes(c)
-                  ? "bg-blue-600 text-white border-blue-600"
-                  : "bg-white text-gray-700 border-gray-300 hover:border-blue-400"
+                  ? "bg-teal-700 text-white border-teal-700"
+                  : "bg-white text-gray-700 border-gray-300 hover:border-teal-400 hover:text-teal-700"
               }`}
             >
               {c}
@@ -61,11 +61,11 @@ export default function FilterBar() {
       <div className="flex flex-wrap gap-4 items-end">
         {/* Bedrooms */}
         <div>
-          <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1">Dorm.</label>
+          <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1" style={{ fontFamily: "var(--font-josefin)" }}>Dorm.</label>
           <select
             value={filters.bedrooms}
-            onChange={(e) => setFilters({ bedrooms: e.target.value, page: 1 })}
-            className="border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+            onChange={(e) => setFilters({ bedrooms: e.target.value })}
+            className="border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-teal-500"
           >
             <option value="">Todos</option>
             {[1, 2, 3, 4].map((n) => (
@@ -74,9 +74,9 @@ export default function FilterBar() {
           </select>
         </div>
 
-        {/* Yield range */}
+        {/* Cap Rate range */}
         <div>
-          <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1">Yield mín. (%)</label>
+          <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1" style={{ fontFamily: "var(--font-josefin)" }}>Cap Rate mín. (%)</label>
           <input
             type="number"
             min={0}
@@ -85,17 +85,17 @@ export default function FilterBar() {
             value={filters.min_yield || ""}
             onChange={(e) => setFilters({ min_yield: e.target.value ? parseFloat(e.target.value) : 0, page: 1 })}
             placeholder="0"
-            className="border border-gray-300 rounded px-2 py-1.5 text-sm w-20 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="border border-gray-300 rounded px-2 py-1.5 text-sm w-20 focus:outline-none focus:ring-1 focus:ring-teal-500"
           />
         </div>
 
         {/* Sort */}
         <div>
-          <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1">Ordenar por</label>
+          <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1" style={{ fontFamily: "var(--font-josefin)" }}>Ordenar por</label>
           <select
             value={filters.sort_by}
-            onChange={(e) => setFilters({ sort_by: e.target.value, page: 1 })}
-            className="border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+            onChange={(e) => setFilters({ sort_by: e.target.value })}
+            className="border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-teal-500"
           >
             {SORT_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>{o.label}</option>
@@ -105,8 +105,8 @@ export default function FilterBar() {
 
         {/* Reset */}
         <button
-          onClick={() => setFilters({ commune: [], property_type: "", bedrooms: "", min_yield: 0, max_yield: 0, min_price: 0, max_price: 0, sort_by: "yield_desc", page: 1 })}
-          className="text-sm text-gray-500 hover:text-gray-800 underline"
+          onClick={() => setFilters({ commune: [], property_type: "", bedrooms: "", min_yield: 0, max_yield: 0, min_price: 0, max_price: 0, sort_by: "yield_desc" })}
+          className="text-sm text-teal-700 hover:text-teal-900 cursor-pointer underline"
         >
           Limpiar
         </button>

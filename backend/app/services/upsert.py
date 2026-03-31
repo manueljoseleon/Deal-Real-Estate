@@ -34,47 +34,63 @@ def upsert_listings(db: Session, listings: list[dict], listing_type: str) -> dic
 
         if listing_type == "sale":
             sql = text(f"""
-                INSERT INTO properties (
-                    id, external_id, portal, url, market,
-                    title, description, property_type,
-                    bedrooms, bathrooms, useful_area_m2, total_area_m2,
-                    floor, parking, storage,
-                    price_clp, price_uf, price_per_m2_uf, hoa_fee_clp,
-                    commune, region, neighborhood,
-                    lat, lng, location,
-                    images, is_active, is_canonical, dedup_status,
-                    first_seen_at, last_seen_at, created_at
-                ) VALUES (
-                    gen_random_uuid(), :external_id, :portal, :url, :market,
-                    :title, :description, :property_type,
-                    :bedrooms, :bathrooms, :useful_area_m2, :total_area_m2,
-                    :floor, :parking, :storage,
-                    :price_clp, :price_uf, :price_per_m2_uf, :hoa_fee_clp,
-                    :commune, :region, :neighborhood,
-                    :lat, :lng, {location_expr},
-                    :images, TRUE, TRUE, 'pending',
-                    NOW(), NOW(), NOW()
+                WITH before AS (
+                    SELECT id, price_uf, price_clp
+                    FROM properties
+                    WHERE external_id = :external_id AND portal = :portal
+                ),
+                upserted AS (
+                    INSERT INTO properties (
+                        id, external_id, portal, url, market,
+                        title, description, property_type,
+                        bedrooms, bathrooms, useful_area_m2, total_area_m2,
+                        floor, parking, storage,
+                        price_clp, price_uf, price_per_m2_uf, hoa_fee_clp,
+                        commune, region, neighborhood,
+                        lat, lng, location,
+                        images, is_active, is_canonical, dedup_status,
+                        first_seen_at, last_seen_at, created_at
+                    ) VALUES (
+                        gen_random_uuid(), :external_id, :portal, :url, :market,
+                        :title, :description, :property_type,
+                        :bedrooms, :bathrooms, :useful_area_m2, :total_area_m2,
+                        :floor, :parking, :storage,
+                        :price_clp, :price_uf, :price_per_m2_uf, :hoa_fee_clp,
+                        :commune, :region, :neighborhood,
+                        :lat, :lng, {location_expr},
+                        :images, TRUE, TRUE, 'pending',
+                        NOW(), NOW(), NOW()
+                    )
+                    ON CONFLICT (external_id, portal) DO UPDATE SET
+                        price_clp       = EXCLUDED.price_clp,
+                        price_uf        = EXCLUDED.price_uf,
+                        price_per_m2_uf = COALESCE(EXCLUDED.price_per_m2_uf, properties.price_per_m2_uf),
+                        hoa_fee_clp     = COALESCE(EXCLUDED.hoa_fee_clp, properties.hoa_fee_clp),
+                        useful_area_m2  = COALESCE(EXCLUDED.useful_area_m2, properties.useful_area_m2),
+                        bedrooms        = COALESCE(EXCLUDED.bedrooms, properties.bedrooms),
+                        bathrooms       = COALESCE(EXCLUDED.bathrooms, properties.bathrooms),
+                        lat             = COALESCE(EXCLUDED.lat, properties.lat),
+                        lng             = COALESCE(EXCLUDED.lng, properties.lng),
+                        location        = COALESCE(EXCLUDED.location, properties.location),
+                        neighborhood    = COALESCE(EXCLUDED.neighborhood, properties.neighborhood),
+                        images          = CASE
+                                            WHEN array_length(EXCLUDED.images, 1) > array_length(properties.images, 1)
+                                            THEN EXCLUDED.images
+                                            ELSE properties.images
+                                          END,
+                        is_active       = TRUE,
+                        last_seen_at    = NOW()
+                    RETURNING id, price_uf, price_clp, (xmax = 0) AS is_insert
                 )
-                ON CONFLICT (external_id, portal) DO UPDATE SET
-                    price_clp       = EXCLUDED.price_clp,
-                    price_uf        = EXCLUDED.price_uf,
-                    price_per_m2_uf = COALESCE(EXCLUDED.price_per_m2_uf, properties.price_per_m2_uf),
-                    hoa_fee_clp     = COALESCE(EXCLUDED.hoa_fee_clp, properties.hoa_fee_clp),
-                    useful_area_m2  = COALESCE(EXCLUDED.useful_area_m2, properties.useful_area_m2),
-                    bedrooms        = COALESCE(EXCLUDED.bedrooms, properties.bedrooms),
-                    bathrooms       = COALESCE(EXCLUDED.bathrooms, properties.bathrooms),
-                    lat             = COALESCE(EXCLUDED.lat, properties.lat),
-                    lng             = COALESCE(EXCLUDED.lng, properties.lng),
-                    location        = COALESCE(EXCLUDED.location, properties.location),
-                    neighborhood    = COALESCE(EXCLUDED.neighborhood, properties.neighborhood),
-                    images          = CASE
-                                        WHEN array_length(EXCLUDED.images, 1) > array_length(properties.images, 1)
-                                        THEN EXCLUDED.images
-                                        ELSE properties.images
-                                      END,
-                    is_active       = TRUE,
-                    last_seen_at    = NOW()
-                RETURNING (xmax = 0) AS is_insert
+                SELECT
+                    upserted.id,
+                    upserted.price_uf    AS new_price_uf,
+                    upserted.price_clp   AS new_price_clp,
+                    upserted.is_insert,
+                    before.price_uf      AS old_price_uf,
+                    before.price_clp     AS old_price_clp
+                FROM upserted
+                LEFT JOIN before ON TRUE
             """)
         else:
             sql = text(f"""
@@ -138,7 +154,31 @@ def upsert_listings(db: Session, listings: list[dict], listing_type: str) -> dic
 
         try:
             result = db.execute(sql, params).fetchone()
-            if result and result[0]:
+            if result is None:
+                continue
+
+            is_insert = result.is_insert if listing_type == "sale" else result[0]
+
+            if listing_type == "sale":
+                # Snapshot on new insert (baseline) or price change
+                new_price_uf = result.new_price_uf
+                old_price_uf = result.old_price_uf
+                should_snapshot = is_insert or (
+                    new_price_uf is not None
+                    and old_price_uf is not None
+                    and float(new_price_uf) != float(old_price_uf)
+                )
+                if should_snapshot:
+                    db.execute(text("""
+                        INSERT INTO property_price_snapshots (id, property_id, price_uf, price_clp, recorded_at)
+                        VALUES (gen_random_uuid(), :property_id, :price_uf, :price_clp, NOW())
+                    """), {
+                        "property_id": result.id,
+                        "price_uf":    result.new_price_uf,
+                        "price_clp":   result.new_price_clp,
+                    })
+
+            if is_insert:
                 new_count += 1
             else:
                 updated_count += 1
