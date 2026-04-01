@@ -12,6 +12,10 @@ class Settings(BaseSettings):
     app_version: str = "0.1.0"
     debug: bool = False
 
+    # CORS — comma-separated list of allowed origins
+    # In production set via env var: CORS_ORIGINS=https://your-app.vercel.app
+    cors_origins: list[str] = ["http://localhost:3000"]
+
     # Scraping
     default_communes: list[str] = [
         "Providencia",
@@ -20,6 +24,18 @@ class Settings(BaseSettings):
         "Santiago",
         "Vitacura",
         "San Miguel",
+        "Maipú",
+        # nuevas comunas RM
+        "La Reina",
+        "Peñalolén",
+        "Macul",
+        "Independencia",
+        "Recoleta",
+        "Huechuraba",
+        "Lo Barnechea",
+        "La Florida",
+        "Puente Alto",
+        "Estación Central",
     ]
     scraper_request_delay_min: float = 1.0   # seconds between requests (min)
     scraper_request_delay_max: float = 3.0   # seconds between requests (max)

@@ -1,4 +1,3 @@
-import React from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
@@ -10,8 +9,23 @@ import ReviewPanel from "@/components/analysis/ReviewPanel";
 import PriceHeatBar from "@/components/analysis/PriceHeatBar";
 import ImageGallery from "@/components/properties/ImageGallery";
 import ZoneCard from "@/components/properties/ZoneCard";
+import BackButton from "@/components/properties/BackButton";
+import AttrIcon from "@/components/properties/AttrIcon";
 import PropertyLocationMap from "@/components/properties/PropertyLocationMapClient";
 import { getZoneData } from "@/lib/zones";
+
+function formatTimeAgo(dateStr: string): string {
+  const days = Math.floor((Date.now() - new Date(dateStr).getTime()) / 86_400_000);
+  if (days === 0) return "hoy";
+  if (days === 1) return "hace 1 día";
+  if (days < 7) return `hace ${days} días`;
+  const weeks = Math.floor(days / 7);
+  if (weeks === 1) return "hace 1 semana";
+  if (weeks < 4) return `hace ${weeks} semanas`;
+  const months = Math.floor(days / 30);
+  if (months === 1) return "hace 1 mes";
+  return `hace ${months} meses`;
+}
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -154,13 +168,8 @@ export default async function PropertyDetailPage({ params }: Props) {
     <>
       {/* Sticky nav bar */}
       <div className="sticky top-0 z-20 bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
-          <Link href="/" className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-teal-700 transition-colors shrink-0">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-            Volver
-          </Link>
+        <div className="max-w-6xl mx-auto px-4 py-2 flex items-center justify-between gap-4">
+          <BackButton label="← Oportunidades" />
           <span className="text-sm font-medium text-gray-700 truncate">{standardTitle}</span>
           <div className="w-16 shrink-0" />
         </div>
@@ -169,8 +178,8 @@ export default async function PropertyDetailPage({ params }: Props) {
       <main className="max-w-6xl mx-auto px-4 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-          {/* ── LEFT COLUMN ── */}
-          <div className="space-y-5">
+          {/* ── LEFT COLUMN ── (order-2 on mobile so BTL shows first) */}
+          <div className="space-y-5 order-2 lg:order-1">
             <ImageGallery images={property.images} alt={standardTitle} />
 
             <div>
@@ -188,6 +197,7 @@ export default async function PropertyDetailPage({ params }: Props) {
                 {property.neighborhood && ` · ${property.neighborhood}`}
                 {property.region && ` · ${property.region}`}
               </p>
+              <p className="text-xs text-gray-400 mt-1">Publicada {formatTimeAgo(property.first_seen_at)}</p>
             </div>
 
             {/* Attributes card */}
@@ -223,6 +233,21 @@ export default async function PropertyDetailPage({ params }: Props) {
                   <AttrIcon label="Contribuciones" value={formatCLP(property.contributions_clp_annual) + "/año"} icon="fee" />
                 )}
               </div>
+
+              {/* Portal link at bottom of summary card */}
+              <div className="pt-3 border-t border-gray-100">
+                <a
+                  href={property.url?.startsWith("https://") ? property.url : "#"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 text-xs text-teal-700 hover:text-teal-900 hover:underline font-medium"
+                >
+                  <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                  </svg>
+                  Ver publicación en {formatPortal(property.portal)}
+                </a>
+              </div>
             </div>
 
             {property.description && (
@@ -242,8 +267,8 @@ export default async function PropertyDetailPage({ params }: Props) {
             <ZoneCard commune={property.commune} neighborhood={property.neighborhood} mode="indicators" />
           </div>
 
-          {/* ── RIGHT COLUMN ── */}
-          <div className="space-y-5">
+          {/* ── RIGHT COLUMN ── (order-1 on mobile = shows first) */}
+          <div className="space-y-5 order-1 lg:order-2">
             <BTLSummary
               btl={property.btl}
               price_clp={property.price_clp}
@@ -326,7 +351,7 @@ export default async function PropertyDetailPage({ params }: Props) {
           <p className="text-sm text-gray-600 flex-1">
             ¿Te gusta esta propiedad?{" "}
             <a
-              href={property.url}
+              href={property.url?.startsWith("https://") ? property.url : "#"}
               target="_blank"
               rel="noopener noreferrer"
               className="font-semibold text-teal-700 hover:text-teal-900 hover:underline"
@@ -341,27 +366,3 @@ export default async function PropertyDetailPage({ params }: Props) {
   );
 }
 
-const iconPaths: Record<string, React.ReactNode> = {
-  currency: <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33" />,
-  area: <path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5-5-5m5 5v-4m0 4h-4" />,
-  bed: <path strokeLinecap="round" strokeLinejoin="round" d="M3 12h18M3 12V8a2 2 0 012-2h14a2 2 0 012 2v4M3 12v6h18v-6" />,
-  bath: <path strokeLinecap="round" strokeLinejoin="round" d="M6 13.5V6a2 2 0 012-2h8a2 2 0 012 2v7.5M3 13.5h18v1.5a4.5 4.5 0 01-4.5 4.5h-9A4.5 4.5 0 013 15v-1.5z" />,
-  floor: <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M3 14h18M10 3v18M14 3v18" />,
-  parking: <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h.01M15 12h.01M10 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-3 3v-3z" />,
-  storage: <><path strokeLinecap="round" strokeLinejoin="round" d="M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z" /><path strokeLinecap="round" strokeLinejoin="round" d="M12 11v2" /></>,
-  fee: <path strokeLinecap="round" strokeLinejoin="round" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z" />,
-};
-
-function AttrIcon({ label, value, icon }: { label: string; value: string; icon: string }) {
-  return (
-    <div className="flex items-start gap-2">
-      <svg className="w-3.5 h-3.5 text-gray-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        {iconPaths[icon] ?? iconPaths.fee}
-      </svg>
-      <div>
-        <p className="text-xs text-gray-400">{label}</p>
-        <p className="font-medium text-gray-800 text-sm">{value}</p>
-      </div>
-    </div>
-  );
-}

@@ -29,15 +29,26 @@ from backend.app.scrapers.base import BaseScraper
 
 # Map commune display names to URL slugs used by Portal Inmobiliario
 COMMUNE_SLUGS: dict[str, str] = {
-    "Providencia": "providencia",
-    "Las Condes": "las-condes",
-    "Ñuñoa": "nunoa",
-    "Santiago": "santiago",
-    "Vitacura": "vitacura",
-    "San Miguel": "san-miguel",
-    "Miraflores": "miraflores",
-    "Quilicura": "quilicura",
-    "Maipú": "maipu",
+    "Providencia":      "providencia",
+    "Las Condes":       "las-condes",
+    "Ñuñoa":            "nunoa",
+    "Santiago":         "santiago",
+    "Vitacura":         "vitacura",
+    "San Miguel":       "san-miguel",
+    "Miraflores":       "miraflores",
+    "Quilicura":        "quilicura",
+    "Maipú":            "maipu",
+    # --- nuevas comunas RM ---
+    "La Reina":         "la-reina",
+    "Peñalolén":        "penalolen",
+    "Macul":            "macul",
+    "Independencia":    "independencia",
+    "Recoleta":         "recoleta",
+    "Huechuraba":       "huechuraba",
+    "Lo Barnechea":     "lo-barnechea",
+    "La Florida":       "la-florida",
+    "Puente Alto":      "puente-alto",
+    "Estación Central": "estacion-central",
 }
 
 BASE_URL = "https://www.portalinmobiliario.com"

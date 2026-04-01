@@ -38,13 +38,24 @@ from backend.app.scrapers.base import BaseScraper
 
 
 COMMUNE_SLUGS: dict[str, str] = {
-    "Providencia": "providencia",
-    "Las Condes":  "las-condes",
-    "Ñuñoa":       "nunoa",
-    "Santiago":    "santiago",
-    "Vitacura":    "vitacura",
-    "San Miguel":  "san-miguel",
-    "Maipú":       "maipu",
+    "Providencia":      "providencia",
+    "Las Condes":       "las-condes",
+    "Ñuñoa":            "nunoa",
+    "Santiago":         "santiago",
+    "Vitacura":         "vitacura",
+    "San Miguel":       "san-miguel",
+    "Maipú":            "maipu",
+    # --- nuevas comunas RM ---
+    "La Reina":         "la-reina",
+    "Peñalolén":        "penalolen",
+    "Macul":            "macul",
+    "Independencia":    "independencia",
+    "Recoleta":         "recoleta",
+    "Huechuraba":       "huechuraba",
+    "Lo Barnechea":     "lo-barnechea",
+    "La Florida":       "la-florida",
+    "Puente Alto":      "puente-alto",
+    "Estación Central": "estacion-central",
 }
 
 BASE_URL    = "https://www.toctoc.com"
@@ -184,6 +195,16 @@ class TocTocScraper(BaseScraper):
         # Enrich listings with coordinates + area from detail pages.
         # Use browser-based fetch() (no page navigation) to avoid rate-limiting.
         logger.info("[%s] enriching %d listings…", self.portal_name, len(listings))
+
+        # Establish a fresh TocToc session before the enrich loop so that
+        # browser fetch() calls inside _fetch_detail_data() carry valid cookies.
+        # Without this, ~71% of detail fetches are rejected and galleries are empty.
+        try:
+            await page.goto(BASE_URL, wait_until="domcontentloaded", timeout=20000)
+            await asyncio.sleep(random.uniform(1.5, 2.5))
+        except Exception as e:
+            logger.warning("Could not refresh TocToc session cookie: %s", e)
+
         coords_found = 0
         area_found = 0
         images_enriched = 0

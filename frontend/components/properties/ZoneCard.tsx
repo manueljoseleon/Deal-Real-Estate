@@ -47,7 +47,29 @@ function IndicatorRow({
 
 export default function ZoneCard({ commune, neighborhood, mode = "full" }: Props) {
   const zone = getZoneData(commune);
-  if (!zone) return null;
+
+  if (!zone) {
+    // plusvalia mode: no data, don't render anything
+    if (mode === "plusvalia") return null;
+    return (
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div className="px-5 pt-5 pb-4 border-b border-gray-100">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-0.5">
+            Información del sector
+          </p>
+          <p className="text-base font-semibold text-gray-900" style={{ fontFamily: "var(--font-josefin)" }}>
+            {[neighborhood, commune].filter(Boolean).join(", ") || commune}
+          </p>
+        </div>
+        <div className="px-5 py-4">
+          <p className="text-sm text-gray-400">
+            Aún no tenemos información detallada del sector para{" "}
+            <span className="font-medium text-gray-600">{commune ?? "esta comuna"}</span>.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const locationLabel = [neighborhood, commune].filter(Boolean).join(", ");
   const pvColors = PLUSVALIA_COLORS[zone.plusvalia.perspectiva];
@@ -102,7 +124,7 @@ export default function ZoneCard({ commune, neighborhood, mode = "full" }: Props
           Potencial de plusvalía
         </span>
         <span className={`ml-auto text-xs font-bold px-2 py-0.5 rounded-full ${pvColors.bg} ${pvColors.text}`}>
-          {perspLabels[zone.plusvalia.perspectiva]}
+          {perspLabels[zone.plusvalia.perspectiva] ?? zone.plusvalia.perspectiva}
         </span>
       </div>
       <p className="text-sm leading-relaxed text-gray-600">
