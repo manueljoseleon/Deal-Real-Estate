@@ -119,11 +119,23 @@ export default function DealAnalyzerCharts({ result, inputs }: Props) {
               iconType="square"
               iconSize={10}
               wrapperStyle={{ fontSize: 10, fontFamily: "monospace" }}
-              payload={[
-                { value: "Neto venta", type: "square", color: "#3b82f6" },
-                { value: "Flujos acum.", type: "square", color: "#b45309" },
-                { value: "Equity invertido", type: "line", color: "#dc2626" },
-              ]}
+              content={() => (
+                <div className="flex gap-3 justify-center text-[10px] font-mono mt-1">
+                  {[
+                    { label: "Neto venta", color: "#3b82f6", type: "square" },
+                    { label: "Flujos acum.", color: "#b45309", type: "square" },
+                    { label: "Equity invertido", color: "#dc2626", type: "line" },
+                  ].map(({ label, color, type }) => (
+                    <span key={label} className="flex items-center gap-1">
+                      {type === "line"
+                        ? <span style={{ width: 12, height: 2, background: color, display: "inline-block" }} />
+                        : <span style={{ width: 10, height: 10, background: color, display: "inline-block" }} />
+                      }
+                      {label}
+                    </span>
+                  ))}
+                </div>
+              )}
             />
           </BarChart>
         </ResponsiveContainer>

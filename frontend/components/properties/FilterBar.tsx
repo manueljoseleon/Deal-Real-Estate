@@ -83,7 +83,7 @@ export default function FilterBar() {
             max={20}
             step={0.5}
             value={filters.min_yield || ""}
-            onChange={(e) => setFilters({ min_yield: e.target.value ? parseFloat(e.target.value) : 0, page: 1 })}
+            onChange={(e) => { setFilters({ min_yield: e.target.value ? parseFloat(e.target.value) : 0 }); setFilters({ page: 1 } as Parameters<typeof setFilters>[0]); }}
             placeholder="0"
             className="border border-gray-300 rounded px-2 py-1.5 text-sm w-20 focus:outline-none focus:ring-1 focus:ring-teal-500"
           />

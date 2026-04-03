@@ -69,8 +69,8 @@ export default function CapRateHistogram({ data, totalProperties }: Props) {
             <LabelList
               dataKey="count"
               position="top"
-              formatter={(v: number) =>
-                totalProperties > 0 ? `${((v / totalProperties) * 100).toFixed(1)}%` : ""
+              formatter={(v: unknown) =>
+                totalProperties > 0 ? `${(((v as number) / totalProperties) * 100).toFixed(1)}%` : ""
               }
               style={{ fontSize: 9, fontFamily: "monospace", fill: "#6b7280" }}
             />

@@ -51,7 +51,7 @@ export default function TimeOnMarketChart({ data }: Props) {
             <LabelList
               dataKey="pct"
               position="top"
-              formatter={(v: number) => `${v}%`}
+              formatter={(v: unknown) => `${v}%`}
               style={{ fontSize: 10, fill: "#6b7280" }}
             />
           </Bar>

@@ -20,7 +20,8 @@ function midReturn(ac: AssetClass) {
 }
 
 // Custom tooltip
-function CustomTooltip({ active, payload }: TooltipProps<number, string>) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function CustomTooltip({ active, payload }: any) {
   if (!active || !payload?.length) return null;
   const ac: AssetClass = payload[0].payload.raw;
   return (
