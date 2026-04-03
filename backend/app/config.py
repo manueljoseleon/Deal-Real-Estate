@@ -12,8 +12,8 @@ class Settings(BaseSettings):
     app_version: str = "0.1.0"
     debug: bool = False
 
-    # CORS — comma-separated list of allowed origins
-    # In production set via env var: CORS_ORIGINS=https://your-app.vercel.app
+    # CORS — JSON array in env var: CORS_ORIGINS=["https://your-app.vercel.app"]
+    # Multiple origins: ["https://app.vercel.app","https://custom-domain.com"]
     cors_origins: list[str] = ["http://localhost:3000"]
 
     # Scraping

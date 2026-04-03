@@ -9,7 +9,11 @@ from backend.app.api import properties, analysis, scraper, mercado
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    init_db()
+    try:
+        init_db()
+    except Exception as e:
+        # Log but don't crash — health endpoint must stay reachable for Railway
+        print(f"[WARNING] DB initialization failed at startup: {e}")
     yield
 
 
