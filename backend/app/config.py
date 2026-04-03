@@ -1,3 +1,4 @@
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -14,7 +15,17 @@ class Settings(BaseSettings):
 
     # CORS — JSON array in env var: CORS_ORIGINS=["https://your-app.vercel.app"]
     # Multiple origins: ["https://app.vercel.app","https://custom-domain.com"]
+    # Empty string or missing var → falls back to localhost
     cors_origins: list[str] = ["http://localhost:3000"]
+
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, v: object) -> object:
+        if isinstance(v, str):
+            v = v.strip()
+            if not v:
+                return ["http://localhost:3000"]
+        return v
 
     # Scraping
     default_communes: list[str] = [
