@@ -208,6 +208,60 @@ const ZONES: Record<string, ZoneData> = {
     },
   },
 
+  "Lo Barnechea": {
+    seguridad: {
+      level: "buena",
+      text: "Percepción de seguridad favorable, especialmente en los sectores consolidados de La Dehesa y El Arrayán. Los condominios cerrados con vigilancia 24/7 son el formato dominante. Los sectores más periféricos hacia la precordillera tienen menor densidad y requieren más desplazamiento en auto.",
+    },
+    transporte: {
+      level: "media",
+      text: "Alta dependencia del automóvil. No cuenta con metro y la red de microbuses cubre principalmente el eje Av. La Dehesa y Camino El Alba. Los tiempos de viaje al centro pueden superar los 45 minutos en hora punta. Taxis y servicios de transporte privado son la alternativa habitual para residentes.",
+    },
+    areas_verdes: {
+      level: "excelente",
+      text: "La mayor ventaja natural de la comuna: acceso directo a la precordillera, quebradas, cerros y áreas de esparcimiento al aire libre. Parque La Dehesa y múltiples canchas deportivas en condominios. El contacto con la naturaleza es el principal atributo diferenciador respecto a otras comunas.",
+    },
+    salud: {
+      level: "buena",
+      text: "Clínica Las Condes a menos de 15 minutos. Centros médicos privados y consultas en el sector La Dehesa. Cobertura adecuada para el perfil socioeconómico de la comuna, aunque con menor densidad de centros que comunas más urbanas.",
+    },
+    densidad: {
+      level: "buena",
+      text: "Baja densidad con predominio de casas en condominio y departamentos de mayor tamaño. Perfil residencial familiar de segmento ABC1 y C2. La baja densidad es un atributo valorado por sus residentes y sostiene una demanda de arriendo estable en el segmento ejecutivo.",
+    },
+    plusvalia: {
+      perspectiva: "media-alta",
+      text: "Mercado con alta demanda del segmento ejecutivo y familiar de ingresos altos. Los precios en La Dehesa y El Arrayán han mostrado resiliencia en ciclos bajos por el escaso suelo disponible y la preferencia de familias por el entorno natural. El yield de arriendo es moderado dado el alto precio de entrada, pero la apreciación del capital en el largo plazo ha sido consistente. Mercado relativamente ilíquido comparado con comunas céntricas: los plazos de venta son más largos.",
+    },
+  },
+
+  "La Florida": {
+    seguridad: {
+      level: "media",
+      text: "Percepción variable según el sector. Los barrios cercanos al metro y las zonas más consolidadas del sector oriente tienen mejor perfil. La alta densidad poblacional implica mayor actividad en el espacio público, con diferencias importantes entre sectores. La conectividad del metro ha contribuido a mejorar la percepción en los últimos años.",
+    },
+    transporte: {
+      level: "muy buena",
+      text: "Metro línea 5 atraviesa la comuna con múltiples estaciones (Vicente Valdés, Rojas Magallanes, Plaza de Puente Alto) y la línea 4 en el límite sur. Excelente conectividad con el centro en 30–40 minutos. Gran Avenida y Vicuña Mackenna son ejes con alta frecuencia de microbuses. Una de las mejores coberturas de transporte público de las comunas periféricas de Santiago.",
+    },
+    areas_verdes: {
+      level: "buena",
+      text: "Parque La Florida y varios parques urbanos bien distribuidos en la comuna. Acceso relativamente cercano a la precordillera en sectores del oriente. La municipalidad ha invertido en mejoras del espacio público en torno a las estaciones de metro.",
+    },
+    salud: {
+      level: "buena",
+      text: "Hospital Padre Hurtado en comunas vecinas, CESFAM distribuidos en la comuna y creciente oferta de clínicas privadas. Cobertura adecuada para una comuna de alta densidad, con buena accesibilidad a centros de mayor complejidad en Las Condes y Providencia vía metro.",
+    },
+    densidad: {
+      level: "muy buena",
+      text: "Una de las comunas más pobladas de la RM (~400.000 habitantes) con alta densidad residencial. Fuerte demanda de arriendo de trabajadores, familias y estudiantes. La extensión del metro generó un ciclo de desarrollo inmobiliario que sigue activo, transformando sectores en torno a las estaciones.",
+    },
+    plusvalia: {
+      perspectiva: "media-alta",
+      text: "Mercado de alto volumen con precios accesibles y buena liquidez. La cobertura de metro es el principal driver de demanda y de apreciación del capital: las propiedades más cercanas a estaciones han mostrado revalorización consistente. Los yields de arriendo son atractivos para el precio de entrada. El ciclo de renovación urbana en torno a los ejes de metro tiene recorrido adicional, especialmente en los sectores aún no consolidados.",
+    },
+  },
+
   Quilicura: {
     seguridad: {
       level: "media",

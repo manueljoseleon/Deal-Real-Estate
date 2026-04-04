@@ -272,6 +272,10 @@ export interface StockConcentrationResponse {
   communes: StockConcentrationCommune[];
 }
 
+export interface CommunesResponse {
+  communes: string[];
+}
+
 export interface PropertyFilters {
   commune: string[];
   property_type: string;

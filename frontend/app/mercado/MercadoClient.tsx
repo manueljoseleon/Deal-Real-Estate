@@ -14,8 +14,7 @@ import OpportunityScatter from "@/components/mercado/OpportunityScatter";
 import TimeOnMarketChart from "@/components/mercado/TimeOnMarketChart";
 import YieldMatrix from "@/components/mercado/YieldMatrix";
 import StockConcentrationChart from "@/components/mercado/StockConcentrationChart";
-
-const COMMUNES = ["Providencia", "Las Condes", "Ñuñoa", "Santiago", "Vitacura", "San Miguel"];
+import CommuneMultiSelect from "@/components/mercado/CommuneMultiSelect";
 
 const filterParsers = {
   commune:       parseAsArrayOf(parseAsString).withDefault([]),
@@ -47,6 +46,9 @@ function LoadingCard() {
 export default function MercadoClient() {
   const [filters, setFilters] = useQueryStates(filterParsers, { shallow: false });
 
+  // Available communes loaded dynamically from API
+  const [communeOptions, setCommuneOptions] = useState<string[]>([]);
+
   // Chart data states
   const [stats, setStats] = useState<MarketStatsResponse | null>(null);
   const [tom, setTom] = useState<TimeOnMarketResponse | null>(null);
@@ -72,6 +74,11 @@ export default function MercadoClient() {
     bedrooms: filters.bedrooms ? parseInt(filters.bedrooms) : undefined,
   };
 
+  // Load available communes once on mount
+  useEffect(() => {
+    api.mercado.communes().then((r) => setCommuneOptions(r.communes));
+  }, []);
+
   useEffect(() => {
     setLoadingStats(true);
     api.mercado.stats(statsParams).then(setStats).finally(() => setLoadingStats(false));
@@ -87,13 +94,6 @@ export default function MercadoClient() {
     ]).finally(() => setLoadingSprint1(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.commune, filters.property_type, filters.bedrooms]);
-
-  function toggleCommune(c: string) {
-    const next = filters.commune.includes(c)
-      ? filters.commune.filter((x) => x !== c)
-      : [...filters.commune, c];
-    setFilters({ commune: next });
-  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 space-y-2">
@@ -117,21 +117,11 @@ export default function MercadoClient() {
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2" style={{ fontFamily: "var(--font-josefin)" }}>
             Comuna
           </p>
-          <div className="flex flex-wrap gap-2">
-            {COMMUNES.map((c) => (
-              <button
-                key={c}
-                onClick={() => toggleCommune(c)}
-                className={`px-3 py-1 rounded-full text-sm border cursor-pointer transition-colors ${
-                  filters.commune.includes(c)
-                    ? "bg-teal-700 text-white border-teal-700"
-                    : "bg-white text-gray-700 border-gray-300 hover:border-teal-400 hover:text-teal-700"
-                }`}
-              >
-                {c}
-              </button>
-            ))}
-          </div>
+          <CommuneMultiSelect
+            options={communeOptions}
+            value={filters.commune}
+            onChange={(next) => setFilters({ commune: next })}
+          />
         </div>
 
         <div className="flex flex-wrap gap-4 items-end">

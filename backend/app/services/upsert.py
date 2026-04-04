@@ -129,7 +129,7 @@ def upsert_listings(db: Session, listings: list[dict], listing_type: str) -> dic
             "external_id": item.get("external_id"),
             "portal": item.get("portal"),
             "url": item.get("url", ""),
-            "market": item.get("market", "chile"),
+            "market": item.get("market") or item.get("listing_type", "sale"),
             "title": item.get("title"),
             "description": item.get("description"),
             "property_type": item.get("property_type"),

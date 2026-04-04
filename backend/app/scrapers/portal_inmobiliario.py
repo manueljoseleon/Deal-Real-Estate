@@ -58,13 +58,26 @@ LISTINGS_PER_PAGE = 48
 class PortalInmobiliarioScraper(BaseScraper):
     portal_name = "portal_inmobiliario"
 
-    async def scrape_sales(self, communes: list[str]) -> list[dict]:
-        return await self._scrape(communes, listing_type="sale")
+    async def scrape_sales(
+        self,
+        communes: list[str],
+        limit: Optional[int] = None,
+    ) -> list[dict]:
+        return await self._scrape(communes, listing_type="sale", limit=limit)
 
-    async def scrape_rentals(self, communes: list[str]) -> list[dict]:
-        return await self._scrape(communes, listing_type="rental")
+    async def scrape_rentals(
+        self,
+        communes: list[str],
+        limit: Optional[int] = None,
+    ) -> list[dict]:
+        return await self._scrape(communes, listing_type="rental", limit=limit)
 
-    async def _scrape(self, communes: list[str], listing_type: str) -> list[dict]:
+    async def _scrape(
+        self,
+        communes: list[str],
+        listing_type: str,
+        limit: Optional[int] = None,
+    ) -> list[dict]:
         uf_rate = await self.get_uf_value()
         results: list[dict] = []
 
@@ -81,15 +94,29 @@ class PortalInmobiliarioScraper(BaseScraper):
                     print(f"[WARN] No URL slug for commune '{commune}' — skipping")
                     continue
 
-                listings = await self._scrape_commune(
-                    page, slug, commune, listing_type, uf_rate
-                )
-                results.extend(listings)
-                print(f"[{self.portal_name}] {listing_type} {commune}: {len(listings)} listings")
+                for prop_type_slug in ("departamento", "casa"):
+                    remaining = max(limit - len(results), 0) if limit is not None else None
+                    if remaining == 0:
+                        break
+
+                    listings = await self._scrape_commune(
+                        page,
+                        slug,
+                        commune,
+                        listing_type,
+                        uf_rate,
+                        prop_type_slug=prop_type_slug,
+                        limit=remaining,
+                    )
+                    results.extend(listings)
+                    print(f"[{self.portal_name}] {listing_type} {prop_type_slug} {commune}: {len(listings)} listings")
+
+                if limit is not None and len(results) >= limit:
+                    break
 
             await context.close()
 
-        return results
+        return results[:limit] if limit is not None else results
 
     async def _scrape_commune(
         self,
@@ -98,6 +125,8 @@ class PortalInmobiliarioScraper(BaseScraper):
         commune: str,
         listing_type: str,
         uf_rate: float,
+        prop_type_slug: str = "departamento",
+        limit: Optional[int] = None,
     ) -> list[dict]:
         action = "arriendo" if listing_type == "rental" else "venta"
         listings: list[dict] = []
@@ -105,7 +134,7 @@ class PortalInmobiliarioScraper(BaseScraper):
 
         while True:
             url = (
-                f"{BASE_URL}/{action}/departamento/{slug}-metropolitana/"
+                f"{BASE_URL}/{action}/{prop_type_slug}/{slug}-metropolitana/"
                 f"_Desde_{offset}_NoIndex_True"
             )
             try:
@@ -142,10 +171,15 @@ class PortalInmobiliarioScraper(BaseScraper):
                 break
 
             for listing_url in listing_urls:
-                listing = await self._scrape_listing(page, listing_url, commune, listing_type, uf_rate)
+                listing = await self._scrape_listing(page, listing_url, commune, listing_type, uf_rate, prop_type_slug)
                 if listing:
                     listings.append(listing)
+                    if limit is not None and len(listings) >= limit:
+                        break
                 await self.jitter()
+
+            if limit is not None and len(listings) >= limit:
+                break
 
             # Advance to next page — stop naturally when no listings are found (handled above)
             # Safety cap: 20 pages = 960 listings max per commune/type
@@ -162,6 +196,7 @@ class PortalInmobiliarioScraper(BaseScraper):
         commune: str,
         listing_type: str,
         uf_rate: float,
+        prop_type_slug: str = "departamento",
     ) -> Optional[dict]:
         try:
             await page.goto(url, wait_until="domcontentloaded", timeout=30000)
@@ -428,10 +463,11 @@ class PortalInmobiliarioScraper(BaseScraper):
             "external_id": external_id,
             "portal": self.portal_name,
             "url": url,
+            "market": listing_type,
             "listing_type": listing_type,
             "title": title,
             "description": description,
-            "property_type": "apartment",
+            "property_type": "house" if prop_type_slug == "casa" else "apartment",
             "bedrooms": bedrooms,
             "bathrooms": self.parse_int(attrs.get("baños")),
             "useful_area_m2": useful_area,
@@ -450,4 +486,3 @@ class PortalInmobiliarioScraper(BaseScraper):
             "lng": lng,
             "images": images[:8],
         }
-

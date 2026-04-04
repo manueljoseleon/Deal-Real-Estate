@@ -9,6 +9,7 @@ import type {
   TimeOnMarketResponse,
   YieldMatrixResponse,
   StockConcentrationResponse,
+  CommunesResponse,
 } from "@/types";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
@@ -135,6 +136,9 @@ export const api = {
       property_type?: string;
     }) =>
       get<StockConcentrationResponse>("/mercado/stock-concentration", params as Record<string, string | string[] | number | boolean | undefined>),
+
+    communes: () =>
+      get<CommunesResponse>("/mercado/communes"),
   },
 
   scraper: {

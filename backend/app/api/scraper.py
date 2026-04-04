@@ -24,6 +24,7 @@ class ScrapeRequest(BaseModel):
     portals: list[str] = ["portal_inmobiliario"]
     communes: list[str] = settings.default_communes
     listing_types: list[str] = ["sale", "rental"]  # sale | rental | both
+    limit: Optional[int] = None
 
 
 SCRAPERS = {
@@ -33,13 +34,35 @@ SCRAPERS = {
 }
 
 
-def _run_scrape_sync(run_id: UUID, portal: str, listing_type: str, communes: list[str]):
+def _run_scrape_sync(
+    run_id: UUID,
+    portal: str,
+    listing_type: str,
+    communes: list[str],
+    limit: Optional[int] = None,
+):
     """Sync wrapper so BackgroundTasks can call the async scraper without nesting event loops."""
-    import asyncio
-    asyncio.run(_run_scrape(run_id, portal, listing_type, communes))
+    import asyncio, sys
+    if sys.platform == "win32":
+        # Uvicorn sets WindowsSelectorEventLoopPolicy globally, but Playwright requires
+        # ProactorEventLoop to create subprocesses on Windows. Create one explicitly.
+        loop = asyncio.ProactorEventLoop()
+        asyncio.set_event_loop(loop)
+        try:
+            loop.run_until_complete(_run_scrape(run_id, portal, listing_type, communes, limit=limit))
+        finally:
+            loop.close()
+    else:
+        asyncio.run(_run_scrape(run_id, portal, listing_type, communes, limit=limit))
 
 
-async def _run_scrape(run_id: UUID, portal: str, listing_type: str, communes: list[str]):
+async def _run_scrape(
+    run_id: UUID,
+    portal: str,
+    listing_type: str,
+    communes: list[str],
+    limit: Optional[int] = None,
+):
     """Background task: execute a scrape run and update the ScrapeRun record."""
     from backend.app.database import SessionLocal
     from backend.app.services.upsert import upsert_listings
@@ -62,9 +85,9 @@ async def _run_scrape(run_id: UUID, portal: str, listing_type: str, communes: li
         )
 
         if listing_type == "sale":
-            listings = await scraper.scrape_sales(communes)
+            listings = await scraper.scrape_sales(communes, limit=limit)
         else:
-            listings = await scraper.scrape_rentals(communes)
+            listings = await scraper.scrape_rentals(communes, limit=limit)
 
         stats = upsert_listings(db, listings, listing_type)
 
@@ -116,7 +139,7 @@ def trigger_scrape(
             runs_started.append({"run_id": str(run.id), "portal": portal, "listing_type": listing_type})
             background_tasks.add_task(
                 _run_scrape_sync,
-                run.id, portal, listing_type, request.communes,
+                run.id, portal, listing_type, request.communes, request.limit,
             )
 
     db.commit()

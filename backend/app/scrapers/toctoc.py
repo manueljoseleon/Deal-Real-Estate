@@ -62,18 +62,45 @@ BASE_URL    = "https://www.toctoc.com"
 API_PATH    = "/gw-lista-seo/propiedades"
 RESULTS_PER_PAGE = 20
 MAX_PAGES   = 50   # 20 * 50 = 1000 max listings per commune/type (early-stop uses API total)
+CAP_THRESHOLD = 950  # if >= this many results, assume cap was hit and use bedroom sub-filters
+
+# Bedroom sub-filter buckets — used when a commune hits the 1,000-listing cap.
+# Each bucket is the "values" list for the "dormitorios" filter object.
+BEDROOM_BUCKETS = [
+    [{"id": 1, "value": [0, 0],   "label": "Studio"}],
+    [{"id": 2, "value": [1, 1],   "label": "1 dormitorio"}],
+    [{"id": 3, "value": [2, 2],   "label": "2 dormitorios"}],
+    [{"id": 4, "value": [3, 3],   "label": "3 dormitorios"}],
+    [{"id": 5, "value": [4, 99],  "label": "4+ dormitorios"}],
+]
 
 
 class TocTocScraper(BaseScraper):
     portal_name = "toctoc"
 
-    async def scrape_sales(self, communes: list[str], enrich: bool = True) -> list[dict]:
-        return await self._scrape(communes, listing_type="sale", enrich=enrich)
+    async def scrape_sales(
+        self,
+        communes: list[str],
+        enrich: bool = True,
+        limit: Optional[int] = None,
+    ) -> list[dict]:
+        return await self._scrape(communes, listing_type="sale", enrich=enrich, limit=limit)
 
-    async def scrape_rentals(self, communes: list[str], enrich: bool = True) -> list[dict]:
-        return await self._scrape(communes, listing_type="rental", enrich=enrich)
+    async def scrape_rentals(
+        self,
+        communes: list[str],
+        enrich: bool = True,
+        limit: Optional[int] = None,
+    ) -> list[dict]:
+        return await self._scrape(communes, listing_type="rental", enrich=enrich, limit=limit)
 
-    async def _scrape(self, communes: list[str], listing_type: str, enrich: bool = True) -> list[dict]:
+    async def _scrape(
+        self,
+        communes: list[str],
+        listing_type: str,
+        enrich: bool = True,
+        limit: Optional[int] = None,
+    ) -> list[dict]:
         uf_rate = await self.get_uf_value()
         results: list[dict] = []
 
@@ -93,13 +120,85 @@ class TocTocScraper(BaseScraper):
                 if i > 0:
                     await self.jitter()  # pause between communes to avoid rate-limiting
 
-                listings = await self._scrape_commune(page, slug, commune, listing_type, uf_rate, enrich=enrich)
-                results.extend(listings)
-                logger.info("[%s] %s %s: %d listings", self.portal_name, listing_type, commune, len(listings))
+                for prop_type_slug in ("departamento", "casa"):
+                    remaining = max(limit - len(results), 0) if limit is not None else None
+                    if remaining == 0:
+                        break
+
+                    listings = await self._scrape_commune(
+                        page,
+                        slug,
+                        commune,
+                        listing_type,
+                        uf_rate,
+                        prop_type_slug=prop_type_slug,
+                        enrich=enrich,
+                        limit=remaining,
+                    )
+                    logger.info("[%s] %s %s %s: %d listings", self.portal_name, listing_type, prop_type_slug, commune, len(listings))
+
+                    # If we hit the cap (≥950 results) and this wasn't a limited run,
+                    # re-run using bedroom sub-filters to break past the 1,000-listing ceiling.
+                    # Sub-filter passes run without enrichment; we enrich only the new listings.
+                    if limit is None and len(listings) >= CAP_THRESHOLD:
+                        logger.warning(
+                            "[toctoc] Cap detected for %s %s %s (%d). Running bedroom sub-filters…",
+                            commune, listing_type, prop_type_slug, len(listings),
+                        )
+                        seen_ids: set[str] = {l["external_id"] for l in listings if l.get("external_id")}
+                        subfilter_listings: list[dict] = list(listings)
+                        new_listings: list[dict] = []
+
+                        for bucket in BEDROOM_BUCKETS:
+                            # enrich=False — fast pass, only scrape listing API (no detail pages)
+                            bucket_results = await self._scrape_commune(
+                                page,
+                                slug,
+                                commune,
+                                listing_type,
+                                uf_rate,
+                                prop_type_slug=prop_type_slug,
+                                enrich=False,
+                                limit=None,
+                                bedroom_filter=bucket,
+                            )
+                            new_count = 0
+                            for l in bucket_results:
+                                eid = l.get("external_id")
+                                if eid and eid not in seen_ids:
+                                    seen_ids.add(eid)
+                                    new_listings.append(l)
+                                    subfilter_listings.append(l)
+                                    new_count += 1
+                            logger.info(
+                                "[toctoc] Sub-filter %s %s %s dorms=%s: %d total, %d new",
+                                commune, listing_type, prop_type_slug,
+                                bucket[0]["label"], len(bucket_results), new_count,
+                            )
+
+                        # Enrich only the truly new listings found via sub-filters
+                        if enrich and new_listings:
+                            logger.info(
+                                "[toctoc] Enriching %d new sub-filter listings for %s %s %s",
+                                len(new_listings), commune, listing_type, prop_type_slug,
+                            )
+                            await self._enrich_listings(page, new_listings)
+
+                        logger.info(
+                            "[toctoc] Sub-filter done %s %s %s: %d unique listings (was %d, +%d new)",
+                            commune, listing_type, prop_type_slug,
+                            len(subfilter_listings), len(listings), len(new_listings),
+                        )
+                        listings = subfilter_listings
+
+                    results.extend(listings)
+
+                if limit is not None and len(results) >= limit:
+                    break
 
             await context.close()
 
-        return results
+        return results[:limit] if limit is not None else results
 
     async def _scrape_commune(
         self,
@@ -108,10 +207,13 @@ class TocTocScraper(BaseScraper):
         commune: str,
         listing_type: str,
         uf_rate: float,
+        prop_type_slug: str = "departamento",
         enrich: bool = True,
+        limit: Optional[int] = None,
+        bedroom_filter: Optional[list] = None,
     ) -> list[dict]:
         action = "arriendo" if listing_type == "rental" else "venta"
-        search_url = f"{BASE_URL}/{action}/departamento/metropolitana/{slug}?page=1"
+        search_url = f"{BASE_URL}/{action}/{prop_type_slug}/metropolitana/{slug}?page=1"
 
         # Load page 1 and capture the API URL + response body using expect_response
         # (browser navigation avoids the 403 that programmatic fetch() triggers)
@@ -143,10 +245,28 @@ class TocTocScraper(BaseScraper):
             logger.warning("Could not extract filtros for %s %s", commune, listing_type)
             return []
 
+        # Inject bedroom sub-filter into filtros JSON if requested.
+        # When bedroom_filter is set, page1_data is discarded (it was scraped without the filter).
+        if bedroom_filter is not None:
+            try:
+                filtros_list = json.loads(filtros_raw)
+                filtros_list = [f for f in filtros_list if f.get("id") != "dormitorios"]
+                filtros_list.append({
+                    "id": "dormitorios",
+                    "type": "radio",
+                    "name": "Dormitorios",
+                    "values": bedroom_filter,
+                })
+                filtros_raw = json.dumps(filtros_list, ensure_ascii=False, separators=(",", ":"))
+                page1_data = None  # force re-fetch with filtered URL
+            except Exception as e:
+                logger.warning("Could not inject bedroom_filter: %s", e)
+
         listings: list[dict] = []
 
         # Page 1: use the already-captured response body (avoids programmatic fetch 403)
-        # Pages 2+: use browser fetch() with credentials
+        # Pages 2+: use browser fetch() with credentials.
+        # When bedroom_filter is set, page1_data is None so all pages go through the API path.
         for page_num in range(1, MAX_PAGES + 1):
             if page_num == 1 and page1_data:
                 response_data = page1_data
@@ -178,9 +298,14 @@ class TocTocScraper(BaseScraper):
                 break
 
             for item in results_raw:
-                parsed_listing = self._parse_result(item, commune, listing_type, uf_rate)
+                parsed_listing = self._parse_result(item, commune, listing_type, uf_rate, prop_type_slug)
                 if parsed_listing:
                     listings.append(parsed_listing)
+                    if limit is not None and len(listings) >= limit:
+                        break
+
+            if limit is not None and len(listings) >= limit:
+                break
 
             # Stop if we've seen all results
             total = response_data.get("total", 0)
@@ -189,11 +314,13 @@ class TocTocScraper(BaseScraper):
 
             await self.jitter()
 
-        if not enrich:
-            return listings
+        enrich_list = listings[:limit] if limit is not None else listings
+        if enrich:
+            await self._enrich_listings(page, enrich_list)
+        return enrich_list
 
-        # Enrich listings with coordinates + area from detail pages.
-        # Use browser-based fetch() (no page navigation) to avoid rate-limiting.
+    async def _enrich_listings(self, page, listings: list[dict]) -> None:
+        """Enrich listings in-place with coords, area, description, and gallery images."""
         logger.info("[%s] enriching %d listings…", self.portal_name, len(listings))
 
         # Establish a fresh TocToc session before the enrich loop so that
@@ -232,7 +359,6 @@ class TocTocScraper(BaseScraper):
             "[%s] coords: %d/%d  area filled: %d  images enriched: %d",
             self.portal_name, coords_found, len(listings), area_found, images_enriched,
         )
-        return listings
 
     async def _fetch_detail_data(self, page, url: str) -> dict:
         """
@@ -372,16 +498,58 @@ class TocTocScraper(BaseScraper):
                 desc = m_desc.group(1).replace('\\n', '\n').replace('\\"', '"').replace('\\/', '/').strip()
                 if desc:
                     result["description"] = desc
-            # 2. Fallback: rendered HTML — look for the description section
+            # 2. TocToc renders long descriptions inside repeated text blocks.
+            # Join them before falling back to shorter generic snippets.
+            if "description" not in result:
+                import html as html_lib
+
+                desc_blocks = re.findall(
+                    r'<div class="c-descripcion">[\s\S]*?</div>\s*</div>\s*</div>',
+                    html,
+                    re.IGNORECASE,
+                )
+                if desc_blocks:
+                    parts: list[str] = []
+                    for block in desc_blocks:
+                        block_parts = re.findall(
+                            r'<p class="text-justify texto">([\s\S]*?)</p>',
+                            block,
+                            re.IGNORECASE,
+                        )
+                        for part in block_parts:
+                            cleaned = html_lib.unescape(re.sub(r'<[^>]+>', ' ', part))
+                            cleaned = re.sub(r'\s+', ' ', cleaned).strip()
+                            if cleaned:
+                                parts.append(cleaned)
+                    desc = "\n".join(dict.fromkeys(parts)).strip()
+                    if len(desc) > 20:
+                        result["description"] = desc
+            # 3. Generic rendered HTML fallback
             if "description" not in result:
                 m_desc_html = re.search(
-                    r'class="[^"]*(?:descripcion|description|ficha-desc)[^"]*"[^>]*>\s*([\s\S]{20,2000?}?)\s*</',
-                    html, re.IGNORECASE
+                    r'<div class="c-descripcion">[\s\S]{20,5000}?</div>',
+                    html,
+                    re.IGNORECASE,
                 )
                 if m_desc_html:
                     import html as html_lib
-                    raw = re.sub(r'<[^>]+>', ' ', m_desc_html.group(1))
-                    desc = html_lib.unescape(raw).strip()
+
+                    raw = re.sub(r'<[^>]+>', ' ', m_desc_html.group(0))
+                    desc = html_lib.unescape(raw)
+                    desc = re.sub(r'\s+', ' ', desc).strip()
+                    if len(desc) > 20:
+                        result["description"] = desc
+            # 4. Last-resort fallback for pages exposing only metadata
+            if "description" not in result:
+                m_meta_desc = re.search(
+                    r'<meta[^>]+(?:name="description"|property="og:description")[^>]+content="([^"]+)"',
+                    html,
+                    re.IGNORECASE,
+                )
+                if m_meta_desc:
+                    import html as html_lib
+
+                    desc = html_lib.unescape(m_meta_desc.group(1)).strip()
                     if len(desc) > 20:
                         result["description"] = desc
 
@@ -499,7 +667,7 @@ class TocTocScraper(BaseScraper):
         await asyncio.sleep(random.uniform(0.4, 0.9))
 
     def _parse_result(
-        self, item: dict, commune: str, listing_type: str, uf_rate: float
+        self, item: dict, commune: str, listing_type: str, uf_rate: float, prop_type_slug: str = "departamento"
     ) -> Optional[dict]:
         """Parse a single listing dict from the /gw-lista-seo/propiedades API."""
         prop_id = item.get("idProperty")
@@ -572,10 +740,11 @@ class TocTocScraper(BaseScraper):
             "external_id": external_id,
             "portal": self.portal_name,
             "url": url,
+            "market": listing_type,
             "listing_type": listing_type,
             "title": titulo or None,
             "description": None,
-            "property_type": "apartment",
+            "property_type": "house" if prop_type_slug == "casa" else "apartment",
             "bedrooms": bedrooms,
             "bathrooms": bathrooms,
             "useful_area_m2": useful_area,

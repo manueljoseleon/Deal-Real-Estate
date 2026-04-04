@@ -1,8 +1,9 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useQueryStates, parseAsString, parseAsArrayOf, parseAsInteger, parseAsFloat } from "nuqs";
-
-const COMMUNES = ["Providencia", "Las Condes", "Ñuñoa", "Santiago", "Vitacura", "San Miguel"];
+import { api } from "@/lib/api";
+import CommuneMultiSelect from "@/components/mercado/CommuneMultiSelect";
 const SORT_OPTIONS = [
   { value: "yield_desc",       label: "Mayor Cap Rate" },
   { value: "price_asc",        label: "Menor precio" },
@@ -24,38 +25,29 @@ export const filterParsers = {
 };
 
 export function useFilters() {
-  return useQueryStates(filterParsers, { shallow: false });
+  // shallow: true — filter changes only update the URL, no SSR re-render.
+  // DashboardClient handles all data fetching client-side via useEffect.
+  return useQueryStates(filterParsers, { shallow: true });
 }
 
 export default function FilterBar() {
   const [filters, setFilters] = useFilters();
+  const [communeOptions, setCommuneOptions] = useState<string[]>([]);
 
-  function toggleCommune(c: string) {
-    const current = filters.commune;
-    const next = current.includes(c) ? current.filter((x) => x !== c) : [...current, c];
-    setFilters({ commune: next });
-  }
+  useEffect(() => {
+    api.mercado.communes().then((r) => setCommuneOptions(r.communes));
+  }, []);
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-4">
       {/* Communes */}
       <div>
         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2" style={{ fontFamily: "var(--font-josefin)" }}>Comuna</p>
-        <div className="flex flex-wrap gap-2">
-          {COMMUNES.map((c) => (
-            <button
-              key={c}
-              onClick={() => toggleCommune(c)}
-              className={`px-3 py-1 rounded-full text-sm border cursor-pointer transition-colors ${
-                filters.commune.includes(c)
-                  ? "bg-teal-700 text-white border-teal-700"
-                  : "bg-white text-gray-700 border-gray-300 hover:border-teal-400 hover:text-teal-700"
-              }`}
-            >
-              {c}
-            </button>
-          ))}
-        </div>
+        <CommuneMultiSelect
+          options={communeOptions}
+          value={filters.commune}
+          onChange={(next) => setFilters({ commune: next })}
+        />
       </div>
 
       <div className="flex flex-wrap gap-4 items-end">

@@ -78,6 +78,79 @@ curl -X POST http://localhost:800X/api/v1/analysis/repair-zone-avg
 - `PATCH /properties/{id}` → si se actualizan lat/lng o área, recalcula `zone_avg` inmediatamente
 - `run_btl_matching()` → recalcula `zone_avg` para todas las propiedades del batch
 
+## Protocolo por comuna antes de scrape completo (CRÍTICO — nunca saltarse)
+
+Antes de lanzar cualquier scrape completo (sin `limit`), SIEMPRE ejecutar estos pasos en orden:
+
+1. **Mini-batch de validación** (`limit=10`): lanzar el scrape con `limit=10` y esperar a que complete.
+2. **Verificar resultados del mini-batch**:
+   - `status = completed` y `listings_found >= 1` (si es 0, hay bloqueo — no continuar)
+   - Al menos 1 listing tiene `lat`, `price_uf`, `useful_area_m2` (enriquecimiento funcionó)
+   - `market` es `sale` o `rental`, no `chile`
+3. **Solo si el mini-batch pasa**, lanzar el scrape completo.
+4. **Nunca saltar el mini-batch** aunque el código sea nuevo o "recién probado". Sin excepción.
+
+Si el mini-batch falla o devuelve 0 resultados: diagnosticar bloqueo, revisar slugs, y reportar al usuario antes de cualquier acción.
+
+## Diagnóstico post-scrape (obligatorio)
+
+Después de confirmar que un batch de scrape terminó (status = `completed`), SIEMPRE correr el siguiente diagnóstico de calidad y presentarlo al usuario antes de continuar:
+
+```python
+import psycopg2, os
+conn = psycopg2.connect(os.environ['DATABASE_URL'])  # o leer de .env
+cur = conn.cursor()
+
+# 1. Completitud global por portal
+cur.execute('''
+SELECT portal, COUNT(*) total,
+  ROUND(COUNT(price_uf)*100.0/COUNT(*),1) pct_precio,
+  ROUND(COUNT(useful_area_m2)*100.0/COUNT(*),1) pct_area,
+  ROUND(COUNT(bedrooms)*100.0/COUNT(*),1) pct_dorms,
+  ROUND(COUNT(lat)*100.0/COUNT(*),1) pct_coords,
+  ROUND(COUNT(description)*100.0/COUNT(*),1) pct_desc,
+  ROUND(COUNT(images) FILTER (WHERE array_length(images,1)>=3)*100.0/COUNT(*),1) pct_3imgs
+FROM properties WHERE is_active=TRUE GROUP BY portal
+''')
+
+# 2. Completitud por comuna (solo comunas scrapeadas en el batch)
+# 3. Anomalías: precios < 10 UF o > 100k UF, areas < 15m2 o > 1000m2, coords fuera de RM
+# 4. market field: verificar que NO sea 'chile' para todas las filas
+```
+
+**Umbrales de alerta:**
+- ⚠️ Advertencia: campo con cobertura < 90%
+- 🔴 Crítico: campo con cobertura < 70%
+- 🔴 Crítico siempre: `market = 'chile'` en alguna fila (bug conocido)
+- 🔴 Crítico siempre: descripciones < 5% en comunas nuevas
+
+**Formato de presentación:** tabla por portal + tabla por comuna de las comunas recién scrapeadas + lista de anomalías + propuestas de fix priorizadas.
+
+## Zonas y plusvalía por comuna (CRÍTICO — hacer antes de activar cada comuna nueva)
+
+El detalle de propiedad muestra una sección "Descripción de zona" (seguridad, transporte, áreas verdes, salud, densidad) y una sección "Plusvalía" con texto narrativo. Estos datos vienen de `frontend/lib/zones.ts` — un objeto estático con una entrada por comuna.
+
+**Si una comuna no tiene entrada en `zones.ts`, estas secciones no renderizan nada (sin error visible).** El usuario ve la propiedad sin contexto de zona ni análisis de plusvalía.
+
+**Cuándo agregar:** Cada vez que se incorpore una comuna nueva al scraping (antes o inmediatamente después del primer scrape completo de esa comuna), agregar su entrada en `zones.ts`.
+
+**Qué escribir por comuna:**
+- `seguridad` — nivel (`excelente` | `muy buena` | `buena` | `media` | `variable`) + texto 2–3 oraciones
+- `transporte` — nivel + cobertura de metro, microbuses, dependencia del auto
+- `areas_verdes` — nivel + parques principales, calidad del espacio público
+- `salud` — nivel + hospitales/clínicas principales
+- `densidad` — nivel + perfil de habitantes y demanda de arriendo
+- `plusvalia` — perspectiva (`alta` | `media-alta` | `media` | `orientada al retorno`) + texto 3–5 oraciones orientado al inversionista
+
+**Verificar que no falta ninguna:** comparar claves de `ZONES` en `zones.ts` con las comunas activas en DB:
+```bash
+curl -s http://localhost:800X/api/v1/mercado/communes | python -c "import sys,json; print(json.load(sys.stdin)['communes'])"
+```
+Cualquier comuna en la DB que no esté en `zones.ts` está afectada.
+
+**Comunas con datos al 2026-04-04:**
+Providencia, Las Condes, Ñuñoa, Santiago, Vitacura, San Miguel, Maipú, Quilicura, Lo Barnechea, La Florida.
+
 ## Servidores locales
 
 - Backend: puerto activo definido en `frontend/.env.local` (`NEXT_PUBLIC_API_URL`)

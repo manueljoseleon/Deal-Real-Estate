@@ -30,7 +30,7 @@ interface Props {
 
 export default function DashboardClient({ initialData }: Props) {
   const { setOpen } = useHowItWorks();
-  const [filters] = useQueryStates(filterParsers, { shallow: false });
+  const [filters] = useQueryStates(filterParsers, { shallow: true });
 
   // Infinite scroll state — seeded from server-prefetched data when available
   const [allProperties, setAllProperties] = useState<PropertyListItem[]>(

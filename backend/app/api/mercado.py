@@ -60,6 +60,19 @@ def _base_query(
     return q
 
 
+@router.get("/mercado/communes")
+def mercado_communes(db: Session = Depends(get_db)):
+    """Returns the sorted list of distinct communes with active canonical listings."""
+    rows = (
+        db.query(Property.commune)
+        .filter(Property.is_canonical == True, Property.is_active == True, Property.commune.isnot(None))
+        .distinct()
+        .order_by(Property.commune)
+        .all()
+    )
+    return {"communes": [r.commune for r in rows]}
+
+
 @router.get("/mercado/stats")
 def mercado_stats(
     commune: Optional[list[str]] = Query(default=None),
