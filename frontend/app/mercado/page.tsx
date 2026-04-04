@@ -1,18 +1,16 @@
-import type { Metadata } from "next";
-import { Suspense } from "react";
-import MercadoClient from "./MercadoClient";
+"use client";
 
-export const dynamic = "force-dynamic";
+import dynamic from "next/dynamic";
 
-export const metadata: Metadata = {
-  title: "Análisis de Mercado — Deal Inmobiliario",
-  description: "Visualizaciones de cap rates y oportunidades de inversión inmobiliaria en Chile.",
-};
+const MercadoClient = dynamic(() => import("./MercadoClient"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center min-h-screen text-gray-400 text-sm">
+      Cargando...
+    </div>
+  ),
+});
 
 export default function MercadoPage() {
-  return (
-    <Suspense fallback={<div className="flex items-center justify-center min-h-screen text-gray-400 text-sm">Cargando...</div>}>
-      <MercadoClient />
-    </Suspense>
-  );
+  return <MercadoClient />;
 }
