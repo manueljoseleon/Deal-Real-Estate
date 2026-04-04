@@ -343,8 +343,19 @@ export default async function PropertyDetailPage({ params }: Props) {
           </div>
         </div>
 
+        {/* ── FULL WIDTH — Repeated CTA investment analysis ── */}
+        <div className="mt-6">
+          <ReviewPanel
+            property={property}
+            ufClp={ufClp}
+            propertyId={id}
+            triggerLabel="Ver análisis de inversión completo →"
+            triggerVariant="button"
+          />
+        </div>
+
         {/* ── FULL WIDTH — Portal CTA ── */}
-        <div className="mt-6 bg-gray-50 rounded-xl border border-gray-200 p-4 flex items-center gap-3">
+        <div className="mt-4 bg-gray-50 rounded-xl border border-gray-200 p-4 flex items-center gap-3">
           <svg className="w-5 h-5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
           </svg>

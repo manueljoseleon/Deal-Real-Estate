@@ -136,9 +136,9 @@ function Navbar() {
         </a>
         <a
           href="/oportunidades"
-          className="text-sm font-medium text-teal-400 border border-teal-500/40 rounded-full px-5 py-2 hover:bg-teal-500/10 transition-colors duration-200 cursor-pointer"
+          className="text-xs font-medium text-teal-400 border border-teal-500/40 rounded-full px-3 py-1.5 hover:bg-teal-500/10 transition-colors duration-200 cursor-pointer whitespace-nowrap flex items-center justify-center"
         >
-          Entrar a la plataforma
+          Entrar
         </a>
       </div>
     </nav>
@@ -274,11 +274,6 @@ function HeroSection() {
       <YoutubeBackground />
 
       <div className="relative z-10 max-w-4xl mx-auto space-y-8">
-        <div className="inline-flex items-center gap-2 border border-teal-500/30 bg-teal-500/5 rounded-full px-4 py-1.5 text-teal-400 text-xs font-medium tracking-widest uppercase">
-          <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" />
-          Inteligencia Artificial para Inversión Inmobiliaria
-        </div>
-
         <h1
           className="text-6xl md:text-8xl lg:text-[7rem] font-semibold text-white leading-[1.0] tracking-tight"
           style={{ fontFamily: "var(--font-cormorant)" }}

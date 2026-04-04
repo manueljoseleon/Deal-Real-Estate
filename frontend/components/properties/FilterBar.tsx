@@ -51,6 +51,20 @@ export default function FilterBar() {
       </div>
 
       <div className="flex flex-wrap gap-4 items-end">
+        {/* Property type */}
+        <div>
+          <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1" style={{ fontFamily: "var(--font-josefin)" }}>Tipo</label>
+          <select
+            value={filters.property_type}
+            onChange={(e) => setFilters({ property_type: e.target.value })}
+            className="border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-teal-500"
+          >
+            <option value="">Todos</option>
+            <option value="apartment">Departamento</option>
+            <option value="house">Casa</option>
+          </select>
+        </div>
+
         {/* Bedrooms */}
         <div>
           <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1" style={{ fontFamily: "var(--font-josefin)" }}>Dorm.</label>

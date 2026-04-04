@@ -17,10 +17,11 @@ const PAGE_SIZE = 20;
 
 // `page` intentionally excluded from URL state — infinite scroll manages it locally
 const filterParsers = {
-  commune:   parseAsArrayOf(parseAsString).withDefault([]),
-  bedrooms:  parseAsString.withDefault(""),
-  min_yield: parseAsFloat.withDefault(0),
-  sort_by:   parseAsString.withDefault("yield_desc"),
+  commune:       parseAsArrayOf(parseAsString).withDefault([]),
+  property_type: parseAsString.withDefault(""),
+  bedrooms:      parseAsString.withDefault(""),
+  min_yield:     parseAsFloat.withDefault(0),
+  sort_by:       parseAsString.withDefault("yield_desc"),
 };
 
 interface Props {
@@ -54,7 +55,7 @@ export default function DashboardClient({ initialData }: Props) {
   useEffect(() => { hasMoreRef.current = hasMore; }, [hasMore]);
 
   // Stable string signature of current filters — detects filter changes vs page increments
-  const filterSig = `${filters.commune.join(",")}|${filters.bedrooms}|${filters.min_yield}|${filters.sort_by}`;
+  const filterSig = `${filters.commune.join(",")}|${filters.property_type}|${filters.bedrooms}|${filters.min_yield}|${filters.sort_by}`;
   const prevFilterSig = useRef("");
 
   // Latest fetch ID — discards responses from superseded requests
@@ -109,6 +110,7 @@ export default function DashboardClient({ initialData }: Props) {
     api.properties
       .list({
         commune: filters.commune.length ? filters.commune : undefined,
+        property_type: filters.property_type || undefined,
         bedrooms: filters.bedrooms ? parseInt(filters.bedrooms) : undefined,
         min_yield: filters.min_yield || undefined,
         sort_by: filters.sort_by,

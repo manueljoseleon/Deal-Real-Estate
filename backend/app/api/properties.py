@@ -95,6 +95,12 @@ def list_properties(
         Property.is_active == True,
         Property.useful_area_m2.isnot(None),
         Property.lat.isnot(None),
+        # Hard quality cuts — exclude properties unlikely to be valid BTL investments:
+        # area outliers (data errors or luxury estates), unrealistic rent estimates,
+        # and cap rates that indicate a bad comparable match (not real yield).
+        Property.useful_area_m2 <= 1000,
+        Property.estimated_monthly_rent_clp <= 8_000_000,
+        Property.gross_yield_pct <= 20,
     )
 
     if commune:

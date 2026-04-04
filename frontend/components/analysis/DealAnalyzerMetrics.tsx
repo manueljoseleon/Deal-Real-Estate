@@ -71,10 +71,10 @@ export default function DealAnalyzerMetrics({ result, inputs }: Props) {
         <div className="divide-y divide-gray-100">
 
           {/* Row 1: Yield */}
-          <div className="grid grid-cols-2 divide-x divide-gray-100">
+          <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-gray-100">
             <div className="px-5 py-3">
               <p className="text-[9px] font-bold uppercase tracking-widest text-gray-600 font-mono mb-2">Rentabilidad del activo</p>
-              <div className="flex gap-5">
+              <div className="flex flex-wrap gap-5">
                 <MiniMetric
                   label="Cap Rate Bruto"
                   value={clNum(result.capBruto, 1) + "%"}

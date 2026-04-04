@@ -155,8 +155,8 @@ export default function ReviewPanel({
             </p>
           </div>
 
-          {/* Italic prompt — single line */}
-          <p className="text-xs italic text-gray-500 whitespace-nowrap overflow-hidden text-ellipsis">
+          {/* Italic prompt */}
+          <p className="text-xs italic text-gray-500">
             Para simular tus retornos con más detalle, ver sensibilidades y más, anda a{" "}
             <Link
               href={`/properties/${propertyId}/analyze?uf=${ufClp}`}
@@ -590,9 +590,9 @@ export default function ReviewPanel({
           </section>
 
           {/* ── 7. CTA al final ── */}
-          <div className="rounded-xl border border-teal-200 bg-teal-50 px-4 py-3 flex items-center justify-between gap-3">
+          <div className="rounded-xl border border-teal-200 bg-teal-50 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-              <p className="text-sm font-semibold text-teal-900 whitespace-nowrap">
+              <p className="text-sm font-semibold text-teal-900">
                 ¿Quieres ajustar supuestos o ver el detalle año a año?
               </p>
               <p className="text-xs text-teal-700 mt-0.5">
@@ -601,7 +601,7 @@ export default function ReviewPanel({
             </div>
             <Link
               href={`/properties/${propertyId}/analyze?uf=${ufClp}`}
-              className="shrink-0 px-3 py-1.5 bg-teal-700 text-white text-xs font-medium rounded-lg hover:bg-teal-800 transition-colors whitespace-nowrap"
+              className="w-full sm:w-auto text-center px-3 py-2 bg-teal-700 text-white text-xs font-medium rounded-lg hover:bg-teal-800 transition-colors"
             >
               Calculadora Financiera
             </Link>

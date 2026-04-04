@@ -34,7 +34,7 @@ export default async function AnalyzePage({ params, searchParams }: Props) {
   }
 
   return (
-    <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+    <main className="max-w-7xl mx-auto px-4 py-6 space-y-6 overflow-x-hidden">
       {/* Breadcrumb */}
       <div className="text-sm text-gray-500 flex gap-2">
         <Link href="/oportunidades" className="hover:text-gray-800">Listado</Link>
@@ -43,12 +43,12 @@ export default async function AnalyzePage({ params, searchParams }: Props) {
           {property.title ?? property.external_id}
         </Link>
         <span>›</span>
-        <span className="text-gray-700 font-medium">Deal Analyzer</span>
+        <span className="text-gray-700 font-medium">Calculadora Financiera</span>
       </div>
 
       {/* Header */}
       <div>
-        <h1 className="text-xl font-bold text-gray-900">Deal Analyzer</h1>
+        <h1 className="text-xl font-bold text-gray-900">Calculadora Financiera</h1>
         <p className="text-sm text-gray-500 mt-1">
           {property.commune}
           {property.neighborhood && ` · ${property.neighborhood}`}

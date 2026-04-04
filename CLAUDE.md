@@ -92,6 +92,24 @@ Antes de lanzar cualquier scrape completo (sin `limit`), SIEMPRE ejecutar estos 
 
 Si el mini-batch falla o devuelve 0 resultados: diagnosticar bloqueo, revisar slugs, y reportar al usuario antes de cualquier acción.
 
+## Limpieza post-scrape por comuna (obligatorio)
+
+Después de cada scrape completo de una comuna, soft-deletear los listings sin datos útiles para BTL:
+
+```sql
+-- Ventas: sin precio, área o coordenadas
+UPDATE properties SET is_active=FALSE
+WHERE commune = 'X' AND portal = 'toctoc'
+  AND (price_uf IS NULL OR useful_area_m2 IS NULL OR lat IS NULL);
+
+-- Arriendos: sin precio, área o coordenadas
+UPDATE rental_comps SET is_active=FALSE
+WHERE commune = 'X' AND portal = 'toctoc'
+  AND (rent_uf IS NULL OR useful_area_m2 IS NULL OR lat IS NULL);
+```
+
+Siempre usar soft-delete (`is_active=FALSE`), nunca DELETE físico.
+
 ## Diagnóstico post-scrape (obligatorio)
 
 Después de confirmar que un batch de scrape terminó (status = `completed`), SIEMPRE correr el siguiente diagnóstico de calidad y presentarlo al usuario antes de continuar:
