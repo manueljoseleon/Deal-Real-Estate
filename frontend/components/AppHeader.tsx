@@ -7,13 +7,13 @@ import { useHowItWorks } from "@/contexts/HowItWorksContext";
 export default function AppHeader() {
   const pathname = usePathname();
   const { setOpen } = useHowItWorks();
-  if (pathname === "/landing") return null;
+  if (pathname === "/" || pathname === "/landing") return null;
 
   return (
     <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-sm border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 h-12 flex items-center justify-between gap-4">
         <Link
-          href="/landing"
+          href="/"
           className="text-lg font-semibold tracking-wide text-gray-900 hover:text-teal-700 transition-colors"
           style={{ fontFamily: "var(--font-cormorant)" }}
         >
@@ -22,7 +22,7 @@ export default function AppHeader() {
         </Link>
         <nav className="flex items-center gap-4">
           <Link
-            href="/"
+            href="/oportunidades"
             className="text-xs text-gray-400 hover:text-teal-700 transition-colors"
             style={{ fontFamily: "var(--font-josefin)" }}
           >

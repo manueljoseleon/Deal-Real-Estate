@@ -83,7 +83,7 @@ export default function ScraperPage() {
           <h1 className="text-2xl font-bold text-gray-900">Control de Scraper</h1>
           <p className="text-sm text-gray-500 mt-0.5">Lanza y monitorea las corridas de scraping</p>
         </div>
-        <Link href="/" className="text-sm text-gray-500 hover:text-gray-800 border border-gray-300 rounded px-3 py-1.5 bg-white">
+        <Link href="/oportunidades" className="text-sm text-gray-500 hover:text-gray-800 border border-gray-300 rounded px-3 py-1.5 bg-white">
           ← Dashboard
         </Link>
       </div>

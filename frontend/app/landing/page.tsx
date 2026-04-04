@@ -104,7 +104,7 @@ function CTAButton({
 }) {
   return (
     <a
-      href="/"
+      href="/oportunidades"
       className={`group inline-flex items-center gap-2 font-semibold rounded-full bg-gradient-to-r from-teal-500 to-teal-400 text-slate-950 cursor-pointer transition-all duration-200 hover:from-teal-400 hover:to-teal-300 hover:shadow-[0_0_32px_rgba(20,184,166,0.45)] active:scale-[0.98] ${
         large ? "px-10 py-4 text-base" : "px-7 py-3 text-sm"
       }`}
@@ -135,7 +135,7 @@ function Navbar() {
           Aprende
         </a>
         <a
-          href="/"
+          href="/oportunidades"
           className="text-sm font-medium text-teal-400 border border-teal-500/40 rounded-full px-5 py-2 hover:bg-teal-500/10 transition-colors duration-200 cursor-pointer"
         >
           Entrar a la plataforma

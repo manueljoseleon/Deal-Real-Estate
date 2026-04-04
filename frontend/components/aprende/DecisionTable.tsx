@@ -141,7 +141,7 @@ export default function DecisionTable() {
           <p className="text-sm text-teal-800 leading-relaxed"
             style={{ fontFamily: "var(--font-josefin)" }}>
             <strong>Recuerda:</strong> estos rangos son umbrales orientativos para Chile. El contexto importa — una propiedad al 4.5% en una zona con metro nuevo puede ser mejor negocio que una al 5.5% en zona de demanda decreciente.{" "}
-            <a href="/" className="font-semibold underline underline-offset-2 hover:text-teal-600 transition-colors">
+            <a href="/oportunidades" className="font-semibold underline underline-offset-2 hover:text-teal-600 transition-colors">
               Analiza propiedades reales en Deal Inmobiliario →
             </a>
           </p>

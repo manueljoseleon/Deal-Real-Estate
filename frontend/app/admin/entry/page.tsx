@@ -196,7 +196,7 @@ export default function EntryPage() {
         <main className="max-w-3xl mx-auto px-4 py-10 text-center space-y-4">
           <p className="text-2xl">✅</p>
           <p className="text-gray-600 font-medium">No hay propiedades pendientes de revisión.</p>
-          <Link href="/" className="text-sm text-blue-600 hover:underline">← Volver al listado</Link>
+          <Link href="/oportunidades" className="text-sm text-blue-600 hover:underline">← Volver al listado</Link>
         </main>
       </AdminGate>
     );
@@ -212,7 +212,7 @@ export default function EntryPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <Link href="/" className="text-sm text-gray-500 hover:text-gray-800">← Listado</Link>
+            <Link href="/oportunidades" className="text-sm text-gray-500 hover:text-gray-800">← Listado</Link>
             <h1 className="text-lg font-bold text-gray-900 mt-1">Manual Entry</h1>
           </div>
           <div className="flex items-center gap-3">

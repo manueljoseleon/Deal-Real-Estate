@@ -37,7 +37,7 @@ export default async function AnalyzePage({ params, searchParams }: Props) {
     <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
       {/* Breadcrumb */}
       <div className="text-sm text-gray-500 flex gap-2">
-        <Link href="/" className="hover:text-gray-800">Listado</Link>
+        <Link href="/oportunidades" className="hover:text-gray-800">Listado</Link>
         <span>›</span>
         <Link href={`/properties/${id}`} className="hover:text-gray-800 truncate max-w-xs">
           {property.title ?? property.external_id}
