@@ -45,41 +45,45 @@ _COMMUNE_QUERY = """
     LIMIT 50
 """
 
-# Matching tiers: (radius_m, bedrooms_mode, relax_area, use_commune_fallback)
+# Matching tiers: (radius_m, bedrooms_mode, area_tol, use_commune_fallback)
 # bedrooms_mode: "exact" = same bedrooms only | "pm1" = ±1 | "any" = no filter
+# area_tol: fractional tolerance for useful_area_m2 filter (e.g. 0.30 = ±30%).
+#           None means no area filter. Tiers 6 and 7 removed — they produced
+#           too many inflated cap rates and only covered 2.4% of properties.
 _TIERS = [
-    # (radius_m, bedrooms_mode, relax_area, use_commune_fallback)
-    (1500, "exact", False, False),  # Tier 1: 1.5km, exact bedrooms, tight area
-    (1500, "exact", True,  False),  # Tier 2: 1.5km, exact bedrooms, relax area
-    (3000, "exact", False, False),  # Tier 3: 3km, exact bedrooms, tight area
-    (3000, "exact", True,  False),  # Tier 4: 3km, exact bedrooms, relax area
-    (None, "exact", False, True),   # Tier 5: commune, exact bedrooms
-    (None, "pm1",   True,  True),   # Tier 6: commune, bedrooms ±1
-    (None, "any",   True,  True),   # Tier 7: commune, relax all
+    # (radius_m, bedrooms_mode, area_tol, use_commune_fallback)
+    (1500, "exact", 0.30, False),  # Tier 1: 1.5km, exact bedrooms, ±30% area
+    (1500, "exact", 0.60, False),  # Tier 2: 1.5km, exact bedrooms, ±60% area
+    (3000, "exact", 0.20, False),  # Tier 3: 3km,   exact bedrooms, ±20% area
+    (3000, "exact", 0.60, False),  # Tier 4: 3km,   exact bedrooms, ±60% area
+    (None, "exact", 0.20, True),   # Tier 5: commune, exact bedrooms, ±20% area
 ]
 
 
-def _build_geo_query(radius_m: float, bedrooms_mode: str, relax_area: bool) -> str:
+def _build_geo_query(radius_m: float, bedrooms_mode: str, area_tol: float | None) -> str:
     if bedrooms_mode == "exact":
         bedrooms_filter = "AND bedrooms = :bedrooms"
     elif bedrooms_mode == "pm1":
         bedrooms_filter = "AND (bedrooms BETWEEN :bedrooms_min AND :bedrooms_max)"
     else:
         bedrooms_filter = ""
-    area_filter = "" if relax_area else (
+    area_filter = "" if area_tol is None else (
         "AND (useful_area_m2 IS NULL OR useful_area_m2 BETWEEN :area_min AND :area_max)"
     )
     return _GEO_QUERY.format(bedrooms_filter=bedrooms_filter, area_filter=area_filter)
 
 
-def _build_commune_query(bedrooms_mode: str) -> str:
+def _build_commune_query(bedrooms_mode: str, area_tol: float | None) -> str:
     if bedrooms_mode == "exact":
         bedrooms_filter = "AND bedrooms = :bedrooms"
     elif bedrooms_mode == "pm1":
         bedrooms_filter = "AND (bedrooms BETWEEN :bedrooms_min AND :bedrooms_max)"
     else:
         bedrooms_filter = ""
-    return _COMMUNE_QUERY.format(bedrooms_filter=bedrooms_filter)
+    area_filter = "" if area_tol is None else (
+        "AND (useful_area_m2 IS NULL OR useful_area_m2 BETWEEN :area_min AND :area_max)"
+    )
+    return _COMMUNE_QUERY.format(bedrooms_filter=bedrooms_filter, area_filter=area_filter)
 
 
 def find_rental_comps(db: Session, prop: Property) -> tuple[list[int], int]:
@@ -103,23 +107,28 @@ def find_rental_comps(db: Session, prop: Property) -> tuple[list[int], int]:
         "bedrooms": bedrooms,
         "bedrooms_min": max(0, bedrooms - 1),
         "bedrooms_max": bedrooms + 1,
-        "area_min": area * 0.7 if area else 0,
-        "area_max": area * 1.3 if area else 9999,
+        # area_min/area_max are overridden per-tier based on area_tol
+        "area_min": 0,
+        "area_max": 9999,
     }
 
-    for tier_idx, (radius_m, bedrooms_mode, relax_area, use_commune) in enumerate(_TIERS, start=1):
+    for tier_idx, (radius_m, bedrooms_mode, area_tol, use_commune) in enumerate(_TIERS, start=1):
         if force_any_bedrooms:
             bedrooms_mode = "any"
         # Skip geo tiers if no coordinates
         if not has_location and not use_commune:
             continue
-        # Skip commune tiers if we have coordinates (only use as last resort after all geo tiers)
+
+        # Update area bounds for this tier's tolerance
+        if area_tol is not None and area:
+            params["area_min"] = area * (1 - area_tol)
+            params["area_max"] = area * (1 + area_tol)
 
         if use_commune:
-            sql = _build_commune_query(bedrooms_mode)
+            sql = _build_commune_query(bedrooms_mode, area_tol)
         else:
             params["radius_m"] = radius_m
-            sql = _build_geo_query(radius_m, bedrooms_mode, relax_area)
+            sql = _build_geo_query(radius_m, bedrooms_mode, area_tol)
 
         rows = db.execute(text(sql), params).fetchall()
 
