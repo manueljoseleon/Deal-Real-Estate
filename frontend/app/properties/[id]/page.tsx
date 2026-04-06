@@ -343,8 +343,8 @@ export default async function PropertyDetailPage({ params }: Props) {
           </div>
         </div>
 
-        {/* ── FULL WIDTH — Repeated CTA investment analysis ── */}
-        <div className="mt-6">
+        {/* ── Repeated CTA — mobile only (desktop has it in right column already) ── */}
+        <div className="mt-6 lg:hidden">
           <ReviewPanel
             property={property}
             ufClp={ufClp}
