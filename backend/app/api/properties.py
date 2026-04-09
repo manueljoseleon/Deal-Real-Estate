@@ -103,13 +103,14 @@ def list_properties(
         Property.useful_area_m2 <= 1000,
         Property.estimated_monthly_rent_clp <= 8_000_000,
         Property.gross_yield_pct <= 20,
+        Property.matching_tier.isnot(None),
         ~Property.matching_tier.in_([6, 7]),
     )
 
     if commune:
         query = query.filter(Property.commune.in_(commune))
-    if property_type:
-        query = query.filter(Property.property_type == property_type)
+    # Default to apartments only — houses excluded until matching quality improves
+    query = query.filter(Property.property_type == (property_type if property_type else "apartment"))
     if min_yield is not None:
         query = query.filter(Property.gross_yield_pct >= min_yield)
     if max_yield is not None:
@@ -176,8 +177,8 @@ def list_map_pins(
 
     if commune:
         query = query.filter(Property.commune.in_(commune))
-    if property_type:
-        query = query.filter(Property.property_type == property_type)
+    # Default to apartments only — houses excluded until matching quality improves
+    query = query.filter(Property.property_type == (property_type if property_type else "apartment"))
     if min_yield is not None:
         query = query.filter(Property.gross_yield_pct >= min_yield)
     if max_yield is not None:
@@ -353,7 +354,7 @@ def get_property_comps(property_id: UUID, db: Session = Depends(get_db)):
         return []
 
     tier_idx = prop.matching_tier
-    radius_m, bedrooms_mode, relax_area, use_commune = _TIERS[tier_idx - 1]
+    radius_m, bedrooms_mode, area_tol, use_commune = _TIERS[tier_idx - 1]
 
     bedrooms = prop.bedrooms or 0
     prop_area = float(prop.useful_area_m2) if prop.useful_area_m2 else None
@@ -375,22 +376,28 @@ def get_property_comps(property_id: UUID, db: Session = Depends(get_db)):
         bedrooms_params = {}
 
     # --- Area clause (geo tiers only — mirrors matching.py _GEO_QUERY) ---
-    # Commune-tier queries in matching.py have no area filter (_COMMUNE_QUERY),
-    # so we only apply area_clause for the geo branch to keep display in sync.
+    # area_tol is a float (e.g. 0.30 = ±30%). Commune-tier queries have no area
+    # filter in matching.py, so we only apply this for geo tiers.
     geo_area_params: dict = {}
-    if prop_area:
-        if not relax_area:
-            geo_area_clause = "AND rc.useful_area_m2 BETWEEN :area_min AND :area_max"
-            geo_area_params = {"area_min": prop_area * 0.7, "area_max": prop_area * 1.3}
-        else:
-            geo_area_clause = "AND rc.useful_area_m2 IS NOT NULL"
+    if prop_area and area_tol is not None:
+        geo_area_clause = "AND rc.useful_area_m2 BETWEEN :area_min AND :area_max"
+        geo_area_params = {
+            "area_min": prop_area * (1 - area_tol),
+            "area_max": prop_area * (1 + area_tol),
+        }
     else:
         geo_area_clause = ""
 
-    # --- Execute matching query + compute distance for display ---
-    # Commune queries: when property has area, exclude NULL-area comps (matching.py
-    # skips them during normalization — they'd count in matching but show 0 normalized rent).
-    commune_area_clause = "AND rc.useful_area_m2 IS NOT NULL" if prop_area else ""
+    # --- Area clause for commune tier (mirrors matching.py _build_commune_query) ---
+    commune_area_params: dict = {}
+    if prop_area and area_tol is not None:
+        commune_area_clause = "AND (rc.useful_area_m2 IS NULL OR rc.useful_area_m2 BETWEEN :area_min AND :area_max)"
+        commune_area_params = {
+            "area_min": prop_area * (1 - area_tol),
+            "area_max": prop_area * (1 + area_tol),
+        }
+    else:
+        commune_area_clause = ""
 
     _comp_cols = """
                 rc.id, rc.portal, rc.url, rc.commune, rc.neighborhood,
@@ -404,6 +411,7 @@ def get_property_comps(property_id: UUID, db: Session = Depends(get_db)):
                 SELECT {_comp_cols}, NULL::int AS distance_m
                 FROM rental_comps rc
                 WHERE rc.is_canonical = TRUE
+                  AND rc.is_active = TRUE
                   AND rc.property_type = :property_type
                   AND rc.commune = :commune
                   AND rc.rent_clp >= 50000
@@ -414,7 +422,7 @@ def get_property_comps(property_id: UUID, db: Session = Depends(get_db)):
                 LIMIT 50
             """),
             {"property_type": prop.property_type, "commune": prop.commune,
-             **bedrooms_params},
+             **bedrooms_params, **commune_area_params},
         ).fetchall()
     else:
         rows = db.execute(
@@ -426,6 +434,7 @@ def get_property_comps(property_id: UUID, db: Session = Depends(get_db)):
                        ))::int AS distance_m
                 FROM rental_comps rc
                 WHERE rc.is_canonical = TRUE
+                  AND rc.is_active = TRUE
                   AND rc.property_type = :property_type
                   AND rc.rent_clp >= 50000
                   AND (rc.useful_area_m2 IS NULL OR rc.useful_area_m2 >= 15)
