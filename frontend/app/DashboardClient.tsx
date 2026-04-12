@@ -17,8 +17,8 @@ const PAGE_SIZE = 20;
 
 // `page` intentionally excluded from URL state — infinite scroll manages it locally
 const filterParsers = {
-  commune:       parseAsArrayOf(parseAsString).withDefault([]),
-  property_type: parseAsString.withDefault(""),
+  commune:       parseAsArrayOf(parseAsString).withDefault(["Las Condes", "Providencia"]),
+  property_type: parseAsString.withDefault("apartment"),
   bedrooms:      parseAsString.withDefault(""),
   min_yield:     parseAsFloat.withDefault(0),
   sort_by:       parseAsString.withDefault("yield_desc"),
