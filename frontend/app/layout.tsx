@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Analytics } from "@vercel/analytics/react";
+import { Analytics } from "@vercel/analytics/next";
 import { Geist, Cormorant_Garamond, Josefin_Sans } from "next/font/google";
 import { NuqsAdapter } from "nuqs/adapters/next";
 import AppHeader from "@/components/AppHeader";
