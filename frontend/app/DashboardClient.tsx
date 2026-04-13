@@ -1,28 +1,20 @@
 "use client";
 
 import { useEffect, useState, useRef, useMemo, useCallback } from "react";
-import { useQueryStates, parseAsArrayOf, parseAsString, parseAsFloat } from "nuqs";
+// nuqs imported via useFilters from FilterBar — single source of truth for filter parsers
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { api } from "@/lib/api";
 import { useHowItWorks } from "@/contexts/HowItWorksContext";
 import { shouldShowTour } from "@/components/HowItWorksModal";
 import type { PropertyListResponse, PropertyListItem, MapPinItem } from "@/types";
-import FilterBar from "@/components/properties/FilterBar";
+import FilterBar, { useFilters } from "@/components/properties/FilterBar";
 import PropertyCard from "@/components/properties/PropertyCard";
 
 const PropertiesMap = dynamic(() => import("@/components/properties/PropertiesMap"), { ssr: false });
 
 const PAGE_SIZE = 20;
 
-// `page` intentionally excluded from URL state — infinite scroll manages it locally
-const filterParsers = {
-  commune:       parseAsArrayOf(parseAsString).withDefault(["Las Condes", "Providencia"]),
-  property_type: parseAsString.withDefault("apartment"),
-  bedrooms:      parseAsString.withDefault(""),
-  min_yield:     parseAsFloat.withDefault(0),
-  sort_by:       parseAsString.withDefault("yield_desc"),
-};
 
 interface Props {
   /** First page of properties pre-fetched on the server — skips the initial client-side fetch. */
@@ -31,7 +23,7 @@ interface Props {
 
 export default function DashboardClient({ initialData }: Props) {
   const { setOpen } = useHowItWorks();
-  const [filters] = useQueryStates(filterParsers, { shallow: true });
+  const [filters] = useFilters();
 
   // Infinite scroll state — seeded from server-prefetched data when available
   const [allProperties, setAllProperties] = useState<PropertyListItem[]>(
