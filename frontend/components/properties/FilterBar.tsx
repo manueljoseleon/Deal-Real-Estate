@@ -14,8 +14,8 @@ const SORT_OPTIONS = [
 
 // `page` intentionally excluded — infinite scroll manages page as local state
 export const filterParsers = {
-  commune:       parseAsArrayOf(parseAsString).withDefault([]),
-  property_type: parseAsString.withDefault(""),
+  commune:       parseAsArrayOf(parseAsString).withDefault(["Las Condes", "Providencia"]),
+  property_type: parseAsString.withDefault("apartment"),
   bedrooms:      parseAsString.withDefault(""),
   min_yield:     parseAsFloat.withDefault(0),
   max_yield:     parseAsFloat.withDefault(0),
@@ -111,7 +111,7 @@ export default function FilterBar() {
 
         {/* Reset */}
         <button
-          onClick={() => setFilters({ commune: [], property_type: "", bedrooms: "", min_yield: 0, max_yield: 0, min_price: 0, max_price: 0, sort_by: "yield_desc" })}
+          onClick={() => setFilters({ commune: ["Las Condes", "Providencia"], property_type: "apartment", bedrooms: "", min_yield: 0, max_yield: 0, min_price: 0, max_price: 0, sort_by: "yield_desc" })}
           className="text-sm text-teal-700 hover:text-teal-900 cursor-pointer underline"
         >
           Limpiar
