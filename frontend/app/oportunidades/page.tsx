@@ -11,10 +11,11 @@ type PageProps = {
 export default async function OportunidadesPage({ searchParams }: PageProps) {
   const params = await searchParams;
 
-  // Parse URL filter params (same defaults as nuqs parsers in DashboardClient)
+  // Parse URL filter params — defaults match nuqs filterParsers in FilterBar
   const commune = params.commune
     ? (Array.isArray(params.commune) ? params.commune : [params.commune])
-    : [];
+    : ["Las Condes", "Providencia"];
+  const property_type = typeof params.property_type === "string" ? params.property_type : "apartment";
   const bedrooms = typeof params.bedrooms === "string" ? params.bedrooms : "";
   const min_yield = typeof params.min_yield === "string" ? parseFloat(params.min_yield) : 0;
   const sort_by = typeof params.sort_by === "string" ? params.sort_by : "yield_desc";
@@ -24,6 +25,7 @@ export default async function OportunidadesPage({ searchParams }: PageProps) {
   try {
     initialData = await api.properties.list({
       commune: commune.length ? commune : undefined,
+      property_type: property_type || undefined,
       bedrooms: bedrooms ? parseInt(bedrooms) : undefined,
       min_yield: min_yield || undefined,
       sort_by,
