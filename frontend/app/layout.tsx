@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Analytics } from "@vercel/analytics/react";
 import { Geist, Cormorant_Garamond, Josefin_Sans } from "next/font/google";
 import { NuqsAdapter } from "nuqs/adapters/next";
 import AppHeader from "@/components/AppHeader";
@@ -42,6 +43,7 @@ export default function RootLayout({
           <AppHeader />
           <HowItWorksModal />
           <NuqsAdapter>{children}</NuqsAdapter>
+          <Analytics />
         </HowItWorksProvider>
       </body>
     </html>
