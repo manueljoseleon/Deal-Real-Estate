@@ -288,6 +288,195 @@ const ZONES: Record<string, ZoneData> = {
       text: "Mercado emergente con precios accesibles y potencial de revalorización. El crecimiento de la infraestructura de transporte —especialmente el avance del metro— es el principal driver de plusvalía esperada. Mayor riesgo que comunas consolidadas, pero también mayor potencial de apreciación porcentual. Recomendable para inversionistas con tolerancia a esperar 5–10 años para capturar el upside.",
     },
   },
+
+  "Estación Central": {
+    seguridad: {
+      level: "variable",
+      text: "Percepción de seguridad heterogénea según el sector. Las zonas de la Alameda y el entorno de la Estación Central (Terminal de Buses) concentran mayor actividad y mayor variabilidad. Los barrios residenciales interiores son más tranquilos. La ubicación específica dentro de la comuna importa más que el promedio comunal.",
+    },
+    transporte: {
+      level: "excelente",
+      text: "Hub de transporte de primer nivel: metro líneas 1 y 3 (Estación Central, Universidad de Santiago), terminal de buses interprovinciales y acceso directo a la Alameda. Una de las comunas con mejor conectividad del Gran Santiago en términos absolutos.",
+    },
+    areas_verdes: {
+      level: "media",
+      text: "Parque de los Reyes en el límite norte con Quinta Normal y plazas de barrio distribuidas. La densidad de áreas verdes por habitante es inferior al promedio deseable, aunque la proximidad a parques de comunas vecinas mejora el acceso efectivo.",
+    },
+    salud: {
+      level: "buena",
+      text: "Hospital San Juan de Dios (hospital público de alta complejidad), Hospital Clínico de la Universidad de Chile, centros de salud municipal y creciente oferta privada. Buena cobertura para todos los niveles socioeconómicos.",
+    },
+    densidad: {
+      level: "muy buena",
+      text: "Alta densidad con fuerte componente de estudiantes universitarios (Universidad de Santiago), trabajadores del sector comercio y transporte, y población inmigrante. Demanda de arriendo alta y estable, especialmente en tipologías de 1 y 2 dormitorios.",
+    },
+    plusvalia: {
+      perspectiva: "orientada al retorno",
+      text: "La propuesta de Estación Central es fundamentalmente de retorno corriente: precios de entrada bajos y yields elevados por la alta demanda estudiantil y laboral. La apreciación del capital ha sido más moderada que en comunas del sector oriente. Sin embargo, los proyectos de renovación urbana en torno a la Alameda y la consolidación del sector universitario representan un potencial de plusvalía adicional que el mercado aún no ha incorporado del todo. Perfil ideal para inversionistas que priorizan flujo de caja.",
+    },
+  },
+
+  Huechuraba: {
+    seguridad: {
+      level: "media",
+      text: "Percepción variable según el sector. Las zonas de Ciudad Empresarial y los condominios cerrados tienen buena percepción. Los sectores más periféricos y las áreas de expansión informal presentan mayor variabilidad. La diferencia entre zonas dentro de la misma comuna es relevante.",
+    },
+    transporte: {
+      level: "buena",
+      text: "Metro línea 3 con estaciones en la comuna (Hospitales, Plaza de Armas Conchalí en el límite). Ciudad Empresarial cuenta con shuttle corporativos y buena conectividad vial. Los sectores más alejados del metro dependen del automóvil o microbuses con tiempos más largos.",
+    },
+    areas_verdes: {
+      level: "media",
+      text: "Acceso al Cerro La Tortuga y algunas plazas de barrio en sectores residenciales. Ciudad Empresarial tiene áreas verdes internas bien mantenidas. La cobertura es desigual: los condominios cerrados tienen mejor entorno verde que los barrios abiertos.",
+    },
+    salud: {
+      level: "buena",
+      text: "Hospital de Niños Roberto del Río en comunas vecinas, centros de salud municipal y clínicas privadas en crecimiento en el sector de Ciudad Empresarial. Accesibilidad razonable a centros de mayor complejidad en el norte de Santiago.",
+    },
+    densidad: {
+      level: "buena",
+      text: "Crecimiento sostenido con mezcla de desarrollo residencial y corporativo. Ciudad Empresarial genera demanda de arriendo ejecutivo constante. El perfil socioeconómico es mixto, con segmentos C2 y C3 predominando en el sector residencial.",
+    },
+    plusvalia: {
+      perspectiva: "media",
+      text: "Mercado con precios accesibles y oportunidades en el segmento de arriendo ejecutivo vinculado a Ciudad Empresarial. La apreciación del capital ha sido moderada, pero estable. El avance de la línea 3 del metro mejoró la conectividad y generó un ciclo de revalorización que aún tiene recorrido en los sectores más cercanos a las estaciones. Mayor potencial en propiedades orientadas al arriendo corporativo de corto y mediano plazo.",
+    },
+  },
+
+  Independencia: {
+    seguridad: {
+      level: "media",
+      text: "Percepción mixta con diferencias importantes por sector. La zona de Av. Independencia tiene mayor actividad comercial y mayor variabilidad. Los barrios residenciales interiores son más tranquilos. La creciente presencia estudiantil y los proyectos de renovación urbana están mejorando paulatinamente la percepción del entorno.",
+    },
+    transporte: {
+      level: "muy buena",
+      text: "Metro línea 2 y línea 3 con múltiples estaciones (Independencia, Los Libertadores, Einstein). Excelente conectividad con el centro en menos de 10 minutos. Alta frecuencia de microbuses en los ejes principales. Una de las comunas mejor conectadas del sector norte de Santiago.",
+    },
+    areas_verdes: {
+      level: "media",
+      text: "Parque de la Familia en el sector norte y plazas de barrio distribuidas. El ratio de áreas verdes por habitante es inferior al promedio deseado, aunque la accesibilidad al Parque Metropolitano en comunas vecinas mejora la situación. La renovación urbana está incorporando más espacio público en torno a los ejes de metro.",
+    },
+    salud: {
+      level: "muy buena",
+      text: "Hospital Clínico de la Universidad de Chile (uno de los más importantes del país), Hospital Roberto del Río, CESFAM distribuidos en la comuna y creciente oferta privada. Una de las mejores coberturas hospitalarias del sector norte de Santiago.",
+    },
+    densidad: {
+      level: "muy buena",
+      text: "Alta densidad en rápido crecimiento, impulsada por el desarrollo inmobiliario de departamentos compactos orientados al segmento universitario y de profesionales jóvenes. La presencia de la Universidad de Chile y otras instituciones genera demanda de arriendo estructuralmente alta.",
+    },
+    plusvalia: {
+      perspectiva: "media-alta",
+      text: "Una de las comunas con mayor potencial de transformación del Gran Santiago. El ciclo de renovación urbana impulsado por la densificación en torno a las estaciones de metro está generando apreciación acelerada en algunos sectores. Los precios de entrada son aún accesibles comparados con comunas del sector oriente, con yields elevados por la alta demanda estudiantil. Perfil atractivo para inversionistas que buscan capturar el upside de la transformación urbana antes de que los precios se corrijan al alza.",
+    },
+  },
+
+  "La Reina": {
+    seguridad: {
+      level: "muy buena",
+      text: "Percepción de seguridad favorable y consistente. Los barrios residenciales de baja densidad, la baja actividad comercial nocturna y la alta cohesión social del barrio contribuyen a un entorno tranquilo. Una de las comunas con mejor calidad de vida residencial del sector oriente.",
+    },
+    transporte: {
+      level: "buena",
+      text: "Sin metro directo en la mayor parte de la comuna. Las estaciones más cercanas están en Ñuñoa y Peñalolén (línea 4). Red de microbuses en los ejes principales como Av. Larraín y Príncipe de Gales. El automóvil sigue siendo necesario para gran parte de los desplazamientos, aunque la bicicleta tiene uso creciente.",
+    },
+    areas_verdes: {
+      level: "muy buena",
+      text: "Parque Mahuida en las faldas del Cerro San Ramón con acceso a trekking y naturaleza. Múltiples plazas y áreas verdes en los barrios interiores. Buen ratio de espacios verdes por habitante para una comuna de mediana densidad. El entorno natural de precordillera es un atributo diferenciador.",
+    },
+    salud: {
+      level: "muy buena",
+      text: "Acceso en menos de 15 minutos a Clínica Las Condes y al cluster de centros médicos privados de Las Condes. Centros de salud municipal y consultas privadas en la propia comuna. Buena cobertura para el perfil socioeconómico predominante.",
+    },
+    densidad: {
+      level: "buena",
+      text: "Baja densidad con predominio de casas y edificios de baja altura. Perfil residencial familiar con fuerte arraigo del barrio. La demanda de arriendo se concentra en tipologías más grandes (casas y departamentos de 3+ dormitorios) orientadas a familias.",
+    },
+    plusvalia: {
+      perspectiva: "media-alta",
+      text: "Mercado residencial con fuerte demanda de familias que buscan tranquilidad y entorno natural sin alejarse del sector oriente. Los precios son más accesibles que Las Condes y Vitacura con una calidad de vida comparable en términos de entorno y seguridad. El yield de arriendo es moderado por el perfil de tipologías grandes, pero la apreciación del capital ha sido consistente. Mercado con liquidez media: los plazos de venta son razonables para el segmento familiar.",
+    },
+  },
+
+  Macul: {
+    seguridad: {
+      level: "media",
+      text: "Percepción variable según el sector. Los barrios cercanos a Ñuñoa tienen mejor perfil que los sectores limítrofes con La Florida. La densificación progresiva del sector norte de la comuna está mejorando el entorno urbano y la percepción de seguridad en torno a los nuevos proyectos.",
+    },
+    transporte: {
+      level: "buena",
+      text: "Metro línea 4 con estaciones en el límite de la comuna (Los Orientales, Macul). Buena conectividad hacia el centro y Ñuñoa. Red de microbuses en los ejes principales. La dependencia del automóvil es menor que en comunas más periféricas, aunque sin la cobertura de metro directo que tienen sus vecinos.",
+    },
+    areas_verdes: {
+      level: "media",
+      text: "Estadio Fiscal de Macul, plazas de barrio y algunos espacios verdes distribuidos en la comuna. El ratio de áreas verdes por habitante es moderado. La cercanía con Ñuñoa permite acceder a mejores espacios públicos en pocos minutos.",
+    },
+    salud: {
+      level: "buena",
+      text: "Acceso razonable a la oferta de salud de Ñuñoa y Las Condes vía transporte público. CESFAM municipales y consultas privadas dentro de la comuna. Cobertura adecuada para la densidad actual, con buena accesibilidad a centros de mayor complejidad en comunas vecinas.",
+    },
+    densidad: {
+      level: "muy buena",
+      text: "Densidad en aumento acelerado por el desarrollo inmobiliario de departamentos. La vecindad con Ñuñoa está atrayendo proyectos orientados a profesionales jóvenes y parejas que buscan una alternativa más accesible al mercado de Ñuñoa. La demanda de arriendo es robusta y creciente.",
+    },
+    plusvalia: {
+      perspectiva: "media-alta",
+      text: "Macul está viviendo un proceso de transformación impulsado por el derrame del mercado de Ñuñoa: a medida que los precios en Ñuñoa se han ajustado al alza, compradores e inquilinos han migrado a Macul buscando mejor relación precio/calidad. Este proceso tiene recorrido adicional. Los precios de entrada siguen siendo accesibles con yields atractivos y apreciación esperada del capital en el mediano plazo. Una de las mejores opciones para inversionistas que buscan el próximo Ñuñoa a precio de Macul.",
+    },
+  },
+
+  Peñalolén: {
+    seguridad: {
+      level: "media",
+      text: "Percepción variable con diferencias importantes entre sectores. Las zonas del sector oriente (Lo Hermida, Villa La Reina) tienen mejores índices que los sectores de mayor densidad poblacional. Los condominios y proyectos nuevos en el sector alto tienen mejor entorno. La municipalidad ha invertido en mejoras de espacio público y alumbrado.",
+    },
+    transporte: {
+      level: "buena",
+      text: "Metro línea 4 con estaciones en la comuna (Las Torres, Grecia, Los Orientales en el límite). Buena conectividad con Ñuñoa y el centro en 20–35 minutos. Red de microbuses en Av. Grecia y los ejes principales. El sector alto de la comuna tiene mayor dependencia del automóvil.",
+    },
+    areas_verdes: {
+      level: "buena",
+      text: "Acceso al Parque Mahuida y la precordillera en el sector alto. Parque Peñalolén y varias plazas de barrio en el sector bajo. Buen ratio de espacio verde por habitante considerando el acceso a la naturaleza en los sectores orientales de la comuna.",
+    },
+    salud: {
+      level: "buena",
+      text: "CESFAM distribuidos en la comuna, Clínica Indisa y acceso en metro a los grandes centros clínicos de Providencia y Las Condes. Cobertura adecuada para una comuna de mediana densidad con buena conectividad a centros de mayor complejidad.",
+    },
+    densidad: {
+      level: "buena",
+      text: "Densidad media con crecimiento sostenido. Mezcla de casas en condominio, departamentos y vivienda social. Demanda de arriendo diversa con segmentos C2 y C3 predominando. El sector alto está viendo proyectos orientados a segmentos más altos gracias al entorno natural.",
+    },
+    plusvalia: {
+      perspectiva: "media",
+      text: "Mercado con precios accesibles y retornos de arriendo razonables. La cobertura del metro línea 4 y el entorno natural del sector alto son los principales drivers de demanda. La apreciación del capital ha sido moderada y estable, sin los ciclos de alta volatilidad de comunas más centrales. Buena opción para inversionistas que buscan diversificar con activos estables y menor precio de entrada en el sector oriente de Santiago.",
+    },
+  },
+
+  Recoleta: {
+    seguridad: {
+      level: "media",
+      text: "Percepción variable con sectores de diferente perfil. Barrio Patronato y el entorno de Av. Recoleta tienen mayor actividad comercial y mayor variabilidad. Los barrios residenciales interiores son más tranquilos. La gentrificación progresiva de algunos sectores —especialmente en torno a Barrio Italia— está mejorando el entorno urbano y la percepción de seguridad.",
+    },
+    transporte: {
+      level: "muy buena",
+      text: "Metro líneas 2 y 3 con múltiples estaciones (Baquedano, Patronato, Cerro Blanco, Einstein). Excelente conectividad con el centro, Providencia y el sector norte. Alta frecuencia de microbuses en Av. Recoleta y los ejes principales. Una de las comunas con mejor cobertura de transporte público del sector norte.",
+    },
+    areas_verdes: {
+      level: "buena",
+      text: "Cerro San Cristóbal (Parque Metropolitano) con acceso desde la comuna es el gran activo verde de Recoleta. Plazas de barrio distribuidas y espacio público en mejora progresiva. El cerro San Cristóbal representa un activo natural de primer nivel para los residentes del sector norte.",
+    },
+    salud: {
+      level: "muy buena",
+      text: "Hospital San José (hospital público de alta complejidad), múltiples centros de salud municipal y creciente oferta privada. Excelente accesibilidad a centros de Providencia vía metro en menos de 10 minutos. Una de las mejores coberturas hospitalarias del sector norte de Santiago.",
+    },
+    densidad: {
+      level: "muy buena",
+      text: "Alta densidad en proceso de transformación. La gentrificación de sectores como Barrio Bellavista norte y la zona de Patronato está atrayendo a profesionales jóvenes y creativos. Fuerte demanda de arriendo de corto y largo plazo, con creciente interés del segmento Airbnb por la proximidad al Cerro San Cristóbal.",
+    },
+    plusvalia: {
+      perspectiva: "media-alta",
+      text: "Recoleta está en un punto de inflexión: el proceso de gentrificación que transformó Barrio Italia en Ñuñoa está extendiéndose hacia el sector de Patronato y Bellavista norte. Los precios de entrada son aún accesibles respecto a Providencia y Ñuñoa, con yields atractivos y potencial de apreciación del capital en el mediano plazo. La proximidad al Cerro San Cristóbal y la conectividad de metro son activos que el mercado sigue subvalorando. Oportunidad para inversionistas con visión anticipatoria.",
+    },
+  },
 };
 
 /** Returns zone data for the given commune, or null if not found. */
