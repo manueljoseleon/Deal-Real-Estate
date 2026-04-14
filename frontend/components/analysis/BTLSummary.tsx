@@ -15,11 +15,12 @@ interface Props {
   price_clp: number | null;
   price_uf?: number | null;
   compsCount?: number;
+  compsMedianRent?: number | null;
   reviewTrigger?: ReactNode;
   narrativeText?: string;
 }
 
-export default function BTLSummary({ btl, price_clp, price_uf, compsCount, reviewTrigger, narrativeText }: Props) {
+export default function BTLSummary({ btl, price_clp, price_uf, compsCount, compsMedianRent, reviewTrigger, narrativeText }: Props) {
   if (!btl || btl.gross_yield_pct == null) {
     return (
       <div className="rounded-xl border border-gray-200 p-6 text-center text-sm text-gray-400">
@@ -28,21 +29,27 @@ export default function BTLSummary({ btl, price_clp, price_uf, compsCount, revie
     );
   }
 
-  const annualRent = btl.estimated_monthly_rent_clp ? btl.estimated_monthly_rent_clp * 12 : null;
-  const style = btl.yield_band ? (bandStyle[btl.yield_band] ?? bandStyle.weak) : null;
+  // Use live-computed median from displayed comps when available — always consistent with table
+  const estimatedRent = compsMedianRent ?? btl.estimated_monthly_rent_clp;
+  const annualRent = estimatedRent ? estimatedRent * 12 : null;
+
+  // Recompute yield from live rent if compsMedianRent is available
+  const grossYield = (compsMedianRent != null && price_clp != null && price_clp > 0)
+    ? Math.round((compsMedianRent * 12 / price_clp) * 10000) / 100
+    : btl.gross_yield_pct;
+  const yieldBand = grossYield >= 7 ? "excellent" : grossYield >= 5 ? "good" : grossYield >= 3 ? "moderate" : "weak";
+  const style = bandStyle[yieldBand];
 
   return (
-    <div className={`rounded-xl border border-l-4 ${style?.bar ?? "border-gray-300"} bg-white shadow-sm overflow-hidden`}>
+    <div className={`rounded-xl border border-l-4 ${style.bar} bg-white shadow-sm overflow-hidden`}>
       {/* Yield hero */}
-      <div className={`px-6 py-5 ${style?.bg ?? "bg-gray-50"}`}>
+      <div className={`px-6 py-5 ${style.bg}`}>
         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Análisis de rentabilidad</p>
         <div className="flex items-end gap-3">
-          <span className={`text-5xl font-black tabular-nums leading-none ${style?.text ?? "text-gray-700"}`}>
-            {formatYield(btl.gross_yield_pct)}
+          <span className={`text-5xl font-black tabular-nums leading-none ${style.text}`}>
+            {formatYield(grossYield)}
           </span>
-          {style && (
-            <span className={`text-sm font-semibold mb-1 ${style.text}`}>{style.label}</span>
-          )}
+          <span className={`text-sm font-semibold mb-1 ${style.text}`}>{style.label}</span>
         </div>
       </div>
 
@@ -66,7 +73,7 @@ export default function BTLSummary({ btl, price_clp, price_uf, compsCount, revie
               <TooltipIcon text="Renta estimada utilizando arriendos comparables de mercado considerando tipo de propiedad, ubicación, área y dormitorios." />
             </span>
           }
-          value={formatCLP(btl.estimated_monthly_rent_clp)}
+          value={formatCLP(estimatedRent)}
         />
         <StatRow label="Renta estimada / año" value={formatCLP(annualRent)} />
       </div>

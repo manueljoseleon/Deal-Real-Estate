@@ -150,6 +150,20 @@ export default async function PropertyDetailPage({ params }: Props) {
     notFound();
   }
 
+  // Compute estimated rent from displayed comps — always consistent with what user sees.
+  // Median of normalized_rent_clp (rent scaled to sale property size via $/m2).
+  const compsMedianRent: number | null = (() => {
+    const rents = comps
+      .map((c) => c.normalized_rent_clp)
+      .filter((r): r is number => r != null);
+    if (rents.length === 0) return null;
+    const sorted = [...rents].sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    return sorted.length % 2 === 0
+      ? Math.round((sorted[mid - 1] + sorted[mid]) / 2)
+      : sorted[mid];
+  })();
+
   const standardTitle = formatStandardTitle(property.property_type, property.bedrooms, property.commune);
 
   const vsZona =
@@ -274,6 +288,7 @@ export default async function PropertyDetailPage({ params }: Props) {
               price_clp={property.price_clp}
               price_uf={property.price_uf}
               compsCount={comps.length}
+              compsMedianRent={compsMedianRent}
               narrativeText={narrativeText}
               reviewTrigger={
                 <ReviewPanel
