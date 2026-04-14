@@ -99,16 +99,23 @@ export default function DashboardClient({ initialData }: Props) {
     setLoading(true);
     setError(null);
 
-    api.properties
-      .list({
-        commune: filters.commune.length ? filters.commune : undefined,
-        property_type: filters.property_type || undefined,
-        bedrooms: filters.bedrooms ? parseInt(filters.bedrooms) : undefined,
-        min_yield: filters.min_yield || undefined,
-        sort_by: filters.sort_by,
-        page,
-        page_size: PAGE_SIZE,
-      })
+    const params = {
+      commune: filters.commune.length ? filters.commune : undefined,
+      property_type: filters.property_type || undefined,
+      bedrooms: filters.bedrooms ? parseInt(filters.bedrooms) : undefined,
+      min_yield: filters.min_yield || undefined,
+      sort_by: filters.sort_by,
+      page,
+      page_size: PAGE_SIZE,
+    };
+
+    const doFetch = () => api.properties.list(params);
+    const withRetry = (fn: () => ReturnType<typeof doFetch>) =>
+      fn().catch(() => new Promise<Awaited<ReturnType<typeof doFetch>>>(
+        (resolve, reject) => setTimeout(() => fn().then(resolve).catch(reject), 2000)
+      ));
+
+    withRetry(doFetch)
       .then((res) => {
         if (fetchId !== fetchIdRef.current) return;
         setAllProperties((prev) => {
@@ -203,10 +210,14 @@ export default function DashboardClient({ initialData }: Props) {
       {isInitialLoad ? (
         <div className="text-center py-20 text-gray-400 text-sm">Cargando…</div>
       ) : error ? (
-        <div className="text-center py-20 text-red-500 text-sm">
-          Error al cargar propiedades: {error}
-          <br />
-          <span className="text-gray-400">¿Está corriendo el backend?</span>
+        <div className="text-center py-20 text-sm">
+          <p className="text-red-400">No se pudieron cargar las propiedades.</p>
+          <button
+            onClick={() => { setError(null); setPage(1); setAllProperties([]); setTotal(null); }}
+            className="mt-3 text-teal-600 hover:text-teal-800 underline underline-offset-2"
+          >
+            Reintentar
+          </button>
         </div>
       ) : (
         <div className="flex gap-4 min-h-0 items-start">
