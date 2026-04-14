@@ -6,7 +6,6 @@ import AppHeader from "@/components/AppHeader";
 import { HowItWorksProvider } from "@/contexts/HowItWorksContext";
 import HowItWorksModal from "@/components/HowItWorksModal";
 import "./globals.css";
-import "leaflet/dist/leaflet.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

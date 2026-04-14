@@ -1,15 +1,24 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
+import dynamic from "next/dynamic";
 import type { PropertyDetail, DealAnalyzerInputs } from "@/types";
 import { computeDealModel, defaultInputs, exportDealToExcel, findLtvForDscr } from "@/lib/dealModel";
 import { clNum } from "@/lib/formatters";
 import DealAnalyzerInputsPanel from "./DealAnalyzerInputs";
 import DealAnalyzerMetrics from "./DealAnalyzerMetrics";
 import DealAnalyzerTables from "./DealAnalyzerTables";
-import DealAnalyzerCharts from "./DealAnalyzerCharts";
 import DealAnalyzerAnnualTable from "./DealAnalyzerAnnualTable";
 import DealAnalyzerSensitivity from "./DealAnalyzerSensitivity";
+
+const DealAnalyzerCharts = dynamic(() => import("./DealAnalyzerCharts"), {
+  ssr: false,
+  loading: () => (
+    <div className="h-48 flex items-center justify-center text-gray-400 text-sm">
+      Cargando gráficos…
+    </div>
+  ),
+});
 
 interface Props {
   property: PropertyDetail;

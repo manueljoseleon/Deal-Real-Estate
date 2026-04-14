@@ -1,20 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useCallback } from "react";
-import { Cormorant_Garamond, Josefin_Sans } from "next/font/google";
-
-const cormorant = Cormorant_Garamond({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  style: ["normal", "italic"],
-  variable: "--font-cormorant",
-});
-
-const josefin = Josefin_Sans({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600"],
-  variable: "--font-josefin",
-});
 
 // ─── Scroll animation hook ────────────────────────────────────────────────────
 function useScrollReveal() {
@@ -749,7 +735,7 @@ function Footer() {
 export default function LandingPage() {
   return (
     <div
-      className={`${cormorant.variable} ${josefin.variable} bg-slate-950 text-white min-h-screen`}
+      className="bg-slate-950 text-white min-h-screen"
     >
       <style>{`
         .reveal-on-scroll {

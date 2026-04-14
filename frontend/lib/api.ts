@@ -14,7 +14,7 @@ import type {
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
 
-async function get<T>(path: string, params?: Record<string, string | string[] | number | boolean | undefined>): Promise<T> {
+function buildUrl(path: string, params?: Record<string, string | string[] | number | boolean | undefined>): string {
   const url = new URL(`${BASE}${path}`);
   if (params) {
     for (const [key, value] of Object.entries(params)) {
@@ -26,7 +26,17 @@ async function get<T>(path: string, params?: Record<string, string | string[] | 
       }
     }
   }
-  const res = await fetch(url.toString(), { cache: "no-store" });
+  return url.toString();
+}
+
+async function get<T>(path: string, params?: Record<string, string | string[] | number | boolean | undefined>): Promise<T> {
+  const res = await fetch(buildUrl(path, params), { cache: "no-store" });
+  if (!res.ok) throw new Error(`API error ${res.status}: ${path}`);
+  return res.json();
+}
+
+async function getCached<T>(path: string, params?: Record<string, string | string[] | number | boolean | undefined>): Promise<T> {
+  const res = await fetch(buildUrl(path, params), { next: { revalidate: 1800 } });
   if (!res.ok) throw new Error(`API error ${res.status}: ${path}`);
   return res.json();
 }
@@ -116,29 +126,29 @@ export const api = {
       min_price?: number;
       max_price?: number;
     }) =>
-      get<MarketStatsResponse>("/mercado/stats", params as Record<string, string | string[] | number | boolean | undefined>),
+      getCached<MarketStatsResponse>("/mercado/stats", params as Record<string, string | string[] | number | boolean | undefined>),
 
     timeOnMarket: (params?: {
       commune?: string[];
       property_type?: string;
       bedrooms?: string | number;
     }) =>
-      get<TimeOnMarketResponse>("/mercado/time-on-market", params as Record<string, string | string[] | number | boolean | undefined>),
+      getCached<TimeOnMarketResponse>("/mercado/time-on-market", params as Record<string, string | string[] | number | boolean | undefined>),
 
     yieldMatrix: (params?: {
       commune?: string[];
       property_type?: string;
     }) =>
-      get<YieldMatrixResponse>("/mercado/yield-matrix", params as Record<string, string | string[] | number | boolean | undefined>),
+      getCached<YieldMatrixResponse>("/mercado/yield-matrix", params as Record<string, string | string[] | number | boolean | undefined>),
 
     stockConcentration: (params?: {
       commune?: string[];
       property_type?: string;
     }) =>
-      get<StockConcentrationResponse>("/mercado/stock-concentration", params as Record<string, string | string[] | number | boolean | undefined>),
+      getCached<StockConcentrationResponse>("/mercado/stock-concentration", params as Record<string, string | string[] | number | boolean | undefined>),
 
     communes: () =>
-      get<CommunesResponse>("/mercado/communes"),
+      getCached<CommunesResponse>("/mercado/communes"),
   },
 
   scraper: {

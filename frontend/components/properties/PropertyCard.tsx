@@ -13,7 +13,7 @@ interface Props {
   onMouseLeave?: () => void;
 }
 
-export default function PropertyCard({ property, isHovered, onMouseEnter, onMouseLeave }: Props) {
+function PropertyCard({ property, isHovered, onMouseEnter, onMouseLeave }: Props) {
   const band = property.btl?.yield_band ?? null;
   const img = property.images?.[0] ?? null;
   // vs zona: how much cheaper/pricier than zone avg
@@ -135,3 +135,5 @@ export default function PropertyCard({ property, isHovered, onMouseEnter, onMous
     </Link>
   );
 }
+
+export default React.memo(PropertyCard);
