@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
+import { computeMedianRentFromComps } from "@/lib/btl";
 import type { PropertyDetail } from "@/types";
 import { formatUF, formatCLP, formatArea, formatStandardTitle, formatPortal } from "@/lib/formatters";
 import BTLSummary from "@/components/analysis/BTLSummary";
@@ -151,18 +152,7 @@ export default async function PropertyDetailPage({ params }: Props) {
   }
 
   // Compute estimated rent from displayed comps — always consistent with what user sees.
-  // Median of normalized_rent_clp (rent scaled to sale property size via $/m2).
-  const compsMedianRent: number | null = (() => {
-    const rents = comps
-      .map((c) => c.normalized_rent_clp)
-      .filter((r): r is number => r != null);
-    if (rents.length === 0) return null;
-    const sorted = [...rents].sort((a, b) => a - b);
-    const mid = Math.floor(sorted.length / 2);
-    return sorted.length % 2 === 0
-      ? Math.round((sorted[mid - 1] + sorted[mid]) / 2)
-      : sorted[mid];
-  })();
+  const compsMedianRent = computeMedianRentFromComps(comps);
 
   const standardTitle = formatStandardTitle(property.property_type, property.bedrooms, property.commune);
 
@@ -295,6 +285,7 @@ export default async function PropertyDetailPage({ params }: Props) {
                   property={property}
                   ufClp={ufClp}
                   propertyId={id}
+                  compsMedianRent={compsMedianRent}
                   triggerLabel="Ver análisis de inversión completo →"
                   triggerVariant="link"
                 />
@@ -340,6 +331,7 @@ export default async function PropertyDetailPage({ params }: Props) {
                   property={property}
                   ufClp={ufClp}
                   propertyId={id}
+                  compsMedianRent={compsMedianRent}
                   triggerLabel={cta.ctaLabel}
                   triggerVariant="button"
                 />
@@ -364,6 +356,7 @@ export default async function PropertyDetailPage({ params }: Props) {
             property={property}
             ufClp={ufClp}
             propertyId={id}
+            compsMedianRent={compsMedianRent}
             triggerLabel="Ver análisis de inversión completo →"
             triggerVariant="button"
           />

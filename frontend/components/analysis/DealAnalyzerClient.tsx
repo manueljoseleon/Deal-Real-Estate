@@ -24,6 +24,7 @@ interface Props {
   property: PropertyDetail;
   ufClp: number;
   ufDate: string;
+  compsMedianRent?: number | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -82,11 +83,13 @@ function getRecommendation(irr: number): {
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
-export default function DealAnalyzerClient({ property, ufClp, ufDate }: Props) {
+export default function DealAnalyzerClient({ property, ufClp, ufDate, compsMedianRent }: Props) {
   const [inputs, setInputs] = useState<DealAnalyzerInputs>(() => {
+    // Use live comps median when available — consistent with BTLSummary and ReviewPanel
+    const effectiveRent = compsMedianRent ?? property.btl?.estimated_monthly_rent_clp ?? 500_000;
     const base = defaultInputs({
       priceUF: property.price_uf ?? 3000,
-      rentClp: property.btl?.estimated_monthly_rent_clp ?? 500_000,
+      rentClp: effectiveRent,
       contribClpAnnual: property.contributions_clp_annual,
       ufClp,
     });

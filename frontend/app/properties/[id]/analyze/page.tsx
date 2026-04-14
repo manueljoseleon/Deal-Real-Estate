@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
+import { computeMedianRentFromComps } from "@/lib/btl";
 import DealAnalyzerClient from "@/components/analysis/DealAnalyzerClient";
 
 interface Props {
@@ -13,8 +14,14 @@ export default async function AnalyzePage({ params, searchParams }: Props) {
   const { uf: ufParam } = await searchParams;
 
   let property;
+  let compsMedianRent: number | null = null;
   try {
-    property = await api.properties.get(id);
+    const [prop, compsResult] = await Promise.all([
+      api.properties.get(id),
+      api.properties.comps(id).catch(() => []),
+    ]);
+    property = prop;
+    compsMedianRent = computeMedianRentFromComps(compsResult);
   } catch {
     notFound();
   }
@@ -61,6 +68,7 @@ export default async function AnalyzePage({ params, searchParams }: Props) {
         property={property}
         ufClp={ufData.uf_clp}
         ufDate={ufData.date}
+        compsMedianRent={compsMedianRent}
       />
     </main>
   );

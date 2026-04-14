@@ -18,6 +18,7 @@ interface Props {
   property: PropertyDetail;
   ufClp: number;
   propertyId: string;
+  compsMedianRent?: number | null;
   triggerLabel?: string;
   triggerVariant?: "link" | "button";
 }
@@ -32,6 +33,7 @@ export default function ReviewPanel({
   property,
   ufClp,
   propertyId,
+  compsMedianRent,
   triggerLabel = "Evalúa si es una buena inversión →",
   triggerVariant = "link",
 }: Props) {
@@ -49,7 +51,9 @@ export default function ReviewPanel({
   }, [isOpen]);
 
   const btl = property.btl;
-  const hasRent = btl?.estimated_monthly_rent_clp != null && btl.estimated_monthly_rent_clp > 0;
+  // Use live comps median when available — always consistent with what user sees in table
+  const effectiveRent = compsMedianRent ?? btl?.estimated_monthly_rent_clp ?? null;
+  const hasRent = effectiveRent != null && effectiveRent > 0;
   const standardTitle = formatStandardTitle(property.property_type, property.bedrooms, property.commune);
 
   // ---------------------------------------------------------------------------
@@ -62,7 +66,7 @@ export default function ReviewPanel({
   if (hasRent && property.price_uf) {
     const base = defaultInputs({
       priceUF: property.price_uf,
-      rentClp: btl!.estimated_monthly_rent_clp!,
+      rentClp: effectiveRent!,
       contribClpAnnual: property.contributions_clp_annual,
       ufClp,
     });
@@ -199,14 +203,18 @@ export default function ReviewPanel({
             {/* Rent with comparables note */}
             <MetricRow
               label="Renta mensual estimada"
-              value={formatCLP(btl?.estimated_monthly_rent_clp)}
+              value={formatCLP(effectiveRent)}
               sub="Estimado con propiedades comparables del mercado"
             />
 
             {/* Cap rate bruto with formula */}
             <MetricRow
               label="Cap Rate Bruto"
-              value={btl?.gross_yield_pct != null ? `${btl.gross_yield_pct.toFixed(1)}%` : "—"}
+              value={
+                effectiveRent != null && property.price_clp != null && property.price_clp > 0
+                  ? `${((effectiveRent * 12 / property.price_clp) * 100).toFixed(1)}%`
+                  : btl?.gross_yield_pct != null ? `${btl.gross_yield_pct.toFixed(1)}%` : "—"
+              }
               sub="Cap Rate = renta anual estimada / precio de compra"
             />
 
