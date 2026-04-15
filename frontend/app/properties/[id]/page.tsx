@@ -278,6 +278,7 @@ export default async function PropertyDetailPage({ params }: Props) {
               btl={property.btl}
               price_clp={property.price_clp}
               price_uf={property.price_uf}
+              usefulAreaM2={property.useful_area_m2}
               compsCount={filteredComps.length}
               compsMedianRent={compsMedianRent}
               narrativeText={narrativeText}
@@ -298,6 +299,8 @@ export default async function PropertyDetailPage({ params }: Props) {
               btl={property.btl}
               propertyLat={property.lat}
               propertyLng={property.lng}
+              compsMedianRent={compsMedianRent}
+              saleUsefulAreaM2={property.useful_area_m2}
             />
 
             <PriceHeatBar

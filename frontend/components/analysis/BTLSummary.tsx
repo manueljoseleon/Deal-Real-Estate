@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { BTLAnalysis } from "@/types";
 import type { ReactNode } from "react";
 import { formatCLP, formatUF, formatYield } from "@/lib/formatters";
@@ -14,13 +15,14 @@ interface Props {
   btl: BTLAnalysis | null;
   price_clp: number | null;
   price_uf?: number | null;
+  usefulAreaM2?: number | null;
   compsCount?: number;
   compsMedianRent?: number | null;
   reviewTrigger?: ReactNode;
   narrativeText?: string;
 }
 
-export default function BTLSummary({ btl, price_clp, price_uf, compsCount, compsMedianRent, reviewTrigger, narrativeText }: Props) {
+export default function BTLSummary({ btl, price_clp, price_uf, usefulAreaM2, compsCount, compsMedianRent, reviewTrigger, narrativeText }: Props) {
   if (!btl || btl.gross_yield_pct == null) {
     return (
       <div className="rounded-xl border border-gray-200 p-6 text-center text-sm text-gray-400">
@@ -39,6 +41,10 @@ export default function BTLSummary({ btl, price_clp, price_uf, compsCount, comps
     : btl.gross_yield_pct;
   const yieldBand = grossYield >= 7 ? "excellent" : grossYield >= 5 ? "good" : grossYield >= 3 ? "moderate" : "weak";
   const style = bandStyle[yieldBand];
+
+  const rentPerM2 = (estimatedRent && usefulAreaM2 && usefulAreaM2 > 0)
+    ? Math.round(estimatedRent / usefulAreaM2)
+    : null;
 
   return (
     <div className={`rounded-xl border border-l-4 ${style.bar} bg-white shadow-sm overflow-hidden`}>
@@ -66,20 +72,27 @@ export default function BTLSummary({ btl, price_clp, price_uf, compsCount, comps
             </div>
           </div>
         )}
-        <StatRow
-          label={
-            <span className="flex items-center">
-              Renta estimada / mes
-              <TooltipIcon text="Renta estimada utilizando arriendos comparables de mercado considerando tipo de propiedad, ubicación, área y dormitorios." />
-            </span>
-          }
-          value={formatCLP(estimatedRent)}
-        />
+
+        {/* Renta estimada / mes — custom row to show $/m² below */}
+        <div className="flex items-center justify-between px-6 py-3 text-sm">
+          <span className="text-gray-500 flex items-center">
+            Renta estimada / mes
+            <TooltipIcon text='Renta estimada utilizando propiedades comparables de mercado considerando tipo de propiedad, ubicación, área y dormitorios. Mira las propiedades en "Arriendos Comparables".' />
+          </span>
+          <div className="text-right">
+            <p className="font-medium text-gray-800 tabular-nums">{formatCLP(estimatedRent)}</p>
+            {rentPerM2 != null && (
+              <p className="text-xs text-gray-400 tabular-nums">{formatCLP(rentPerM2)}/m²</p>
+            )}
+          </div>
+        </div>
+
         <StatRow label="Renta estimada / año" value={formatCLP(annualRent)} />
       </div>
 
       <p className="text-xs text-gray-400 px-6 py-3 bg-gray-50 border-t border-gray-100">
-        Cap Rate = (renta anual estimada / precio de compra) × 100. No incluye gastos comunes, contribuciones ni vacancia.
+        Rentabilidad o Cap Rate = (renta anual estimada / precio de compra) × 100. Si quieres saber más sobre el Cap Rate y otros indicadores importantes de inversión{" "}
+        <Link href="/aprende" className="text-teal-700 hover:underline font-medium">haz click aquí</Link>
       </p>
 
       {(narrativeText || reviewTrigger) && (
