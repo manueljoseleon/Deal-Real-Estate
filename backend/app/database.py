@@ -69,7 +69,9 @@ def init_db() -> None:
         conn.commit()
 
     # 4. Performance indexes (idempotent — IF NOT EXISTS)
+    # lock_timeout: don't block startup if a long-running transaction holds a table lock
     with engine.connect() as conn:
+        conn.execute(text("SET lock_timeout = '5s'"))
         # properties — most queries filter on (is_canonical, is_active) first
         conn.execute(text("CREATE INDEX IF NOT EXISTS idx_prop_active ON properties (is_canonical, is_active)"))
         conn.execute(text("CREATE INDEX IF NOT EXISTS idx_prop_commune ON properties (commune)"))
