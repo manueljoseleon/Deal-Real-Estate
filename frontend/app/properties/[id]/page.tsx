@@ -263,7 +263,7 @@ export default async function PropertyDetailPage({ params }: Props) {
             )}
 
             {hasLocation && (
-              <div>
+              <div id="location-map-section">
                 <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Ubicación</h2>
                 <PropertyLocationMap lat={property.lat!} lng={property.lng!} label={standardTitle} />
               </div>
@@ -303,6 +303,7 @@ export default async function PropertyDetailPage({ params }: Props) {
               saleUsefulAreaM2={property.useful_area_m2}
               saleBedrooms={property.bedrooms}
               ufClp={ufClp}
+              alignBottomWithId={hasLocation ? "location-map-section" : undefined}
             />
 
             <PriceHeatBar

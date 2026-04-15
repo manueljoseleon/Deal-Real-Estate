@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import type { RentalCompItem, BTLAnalysis } from "@/types";
 import { formatCLP, formatUF, formatArea, formatPortal } from "@/lib/formatters";
@@ -17,14 +17,47 @@ interface Props {
   saleUsefulAreaM2?: number | null;
   saleBedrooms?: number | null;
   ufClp?: number;
+  /** ID of the location map section element — when provided, the scroll
+   *  container's max-height is dynamically set so the table's bottom edge
+   *  aligns with the bottom edge of that element. */
+  alignBottomWithId?: string;
 }
 
 type Row =
   | { type: "comp"; data: RentalCompItem; rentPerM2: number | null }
   | { type: "sale"; rentPerM2: number | null };
 
-export default function RentalCompsTable({ comps, btl, propertyLat, propertyLng, compsMedianRent, saleUsefulAreaM2, saleBedrooms, ufClp }: Props) {
+export default function RentalCompsTable({ comps, btl, propertyLat, propertyLng, compsMedianRent, saleUsefulAreaM2, saleBedrooms, ufClp, alignBottomWithId }: Props) {
   const [view, setView] = useState<"list" | "map">("list");
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Dynamically match the scroll container's max-height so its bottom aligns
+  // with the bottom of the location-map section (cross-column visual alignment).
+  useEffect(() => {
+    if (!alignBottomWithId) return;
+
+    function update() {
+      const mapEl = document.getElementById(alignBottomWithId!);
+      const scrollEl = scrollRef.current;
+      if (!mapEl || !scrollEl) return;
+
+      // Use absolute page positions so scroll position doesn't affect the result.
+      const mapBottom = mapEl.getBoundingClientRect().bottom + window.scrollY;
+      const scrollTop = scrollEl.getBoundingClientRect().top + window.scrollY;
+      const h = mapBottom - scrollTop;
+
+      scrollEl.style.maxHeight = h > 80 ? `${Math.round(h)}px` : "360px";
+    }
+
+    update();
+    // Re-run after a short delay to catch images / fonts settling the layout.
+    const t = setTimeout(update, 400);
+    window.addEventListener("resize", update);
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener("resize", update);
+    };
+  }, [alignBottomWithId]);
 
   const canShowMap = propertyLat != null && propertyLng != null;
 
@@ -122,7 +155,7 @@ export default function RentalCompsTable({ comps, btl, propertyLat, propertyLng,
       {/* List view */}
       {view === "list" && (
         <div className="rounded-lg border border-gray-200 overflow-hidden">
-          <div className="max-h-[360px] overflow-y-auto overflow-x-auto">
+          <div ref={scrollRef} className="max-h-[360px] overflow-y-auto overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide sticky top-0 z-10">
                 <tr>

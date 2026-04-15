@@ -31,6 +31,19 @@ function SetView({ lat, lng }: { lat: number; lng: number }) {
   return null;
 }
 
+// Leaflet may initialize before the layout has fully settled (e.g. while images
+// or fonts are still loading), causing tiles to render at the wrong size or
+// leaving grey patches. invalidateSize() triggers a size recalculation and
+// redraws any missing tiles.
+function MapResizer() {
+  const map = useMap();
+  useEffect(() => {
+    const t = setTimeout(() => map.invalidateSize(), 150);
+    return () => clearTimeout(t);
+  }, [map]);
+  return null;
+}
+
 interface Props {
   lat: number;
   lng: number;
@@ -39,7 +52,7 @@ interface Props {
 
 export default function PropertyLocationMap({ lat, lng, label }: Props) {
   return (
-    <div className="rounded-xl border border-gray-200 overflow-hidden shadow-sm relative z-0" style={{ height: 280 }}>
+    <div className="rounded-xl border border-gray-200 overflow-hidden shadow-sm" style={{ height: 280 }}>
       <MapContainer
         center={[lat, lng]}
         zoom={15}
@@ -52,6 +65,7 @@ export default function PropertyLocationMap({ lat, lng, label }: Props) {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         />
         <SetView lat={lat} lng={lng} />
+        <MapResizer />
         <Marker position={[lat, lng]} icon={pinIcon}>
           <Popup>
             <span className="text-xs font-medium text-gray-800">{label}</span>
