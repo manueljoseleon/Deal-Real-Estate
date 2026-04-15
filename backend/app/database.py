@@ -22,6 +22,7 @@ def get_db():
     """FastAPI dependency: yields a DB session and closes it after the request."""
     db = SessionLocal()
     try:
+        db.execute(text("SET statement_timeout = '30s'"))
         yield db
     finally:
         db.close()
