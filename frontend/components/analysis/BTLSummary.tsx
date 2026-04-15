@@ -77,7 +77,7 @@ export default function BTLSummary({ btl, price_clp, price_uf, usefulAreaM2, com
         <div className="flex items-center justify-between px-6 py-3 text-sm">
           <span className="text-gray-500 flex items-center">
             Renta estimada / mes
-            <TooltipIcon text='Renta estimada utilizando propiedades comparables de mercado considerando tipo de propiedad, ubicación, área y dormitorios. Mira las propiedades en "Arriendos Comparables".' />
+            <TooltipIcon text='Renta estimada utilizando propiedades comparables de mercado considerando tipo de propiedad, ubicación, área y dormitorios. Mira el listado de propiedades utilizadas más abajo en "Arriendos Comparables".' />
           </span>
           <div className="text-right">
             <p className="font-medium text-gray-800 tabular-nums">{formatCLP(estimatedRent)}</p>
@@ -91,7 +91,7 @@ export default function BTLSummary({ btl, price_clp, price_uf, usefulAreaM2, com
       </div>
 
       <p className="text-xs text-gray-400 px-6 py-3 bg-gray-50 border-t border-gray-100">
-        Rentabilidad o Cap Rate = (renta anual estimada / precio de compra) × 100. Si quieres saber más sobre el Cap Rate y otros indicadores importantes de inversión{" "}
+        Rentabilidad o Cap Rate = (renta anual estimada / precio de compra) × 100. Si quieres saber más este y otros indicadores importantes de inversión{" "}
         <Link href="/aprende" className="text-teal-700 hover:underline font-medium">haz click aquí</Link>
       </p>
 

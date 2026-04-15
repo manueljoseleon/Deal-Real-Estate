@@ -301,6 +301,8 @@ export default async function PropertyDetailPage({ params }: Props) {
               propertyLng={property.lng}
               compsMedianRent={compsMedianRent}
               saleUsefulAreaM2={property.useful_area_m2}
+              saleBedrooms={property.bedrooms}
+              ufClp={ufClp}
             />
 
             <PriceHeatBar

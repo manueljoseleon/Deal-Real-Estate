@@ -15,21 +15,31 @@ interface Props {
   propertyLng?: number | null;
   compsMedianRent?: number | null;
   saleUsefulAreaM2?: number | null;
+  saleBedrooms?: number | null;
+  ufClp?: number;
 }
 
 type Row =
   | { type: "comp"; data: RentalCompItem; rentPerM2: number | null }
   | { type: "sale"; rentPerM2: number | null };
 
-export default function RentalCompsTable({ comps, btl, propertyLat, propertyLng, compsMedianRent, saleUsefulAreaM2 }: Props) {
+export default function RentalCompsTable({ comps, btl, propertyLat, propertyLng, compsMedianRent, saleUsefulAreaM2, saleBedrooms, ufClp }: Props) {
   const [view, setView] = useState<"list" | "map">("list");
 
   const canShowMap = propertyLat != null && propertyLng != null;
 
-  // $/m² for the sale property row (median rent / sale area)
+  // $/m² and UF conversions for the sale property row
   const saleRentPerM2 =
     compsMedianRent != null && saleUsefulAreaM2 != null && saleUsefulAreaM2 > 0
       ? Math.round(compsMedianRent / saleUsefulAreaM2)
+      : null;
+  const saleRentUF =
+    compsMedianRent != null && ufClp && ufClp > 0
+      ? Math.round((compsMedianRent / ufClp) * 10) / 10
+      : null;
+  const saleRentPerM2UF =
+    saleRentPerM2 != null && ufClp && ufClp > 0
+      ? Math.round((saleRentPerM2 / ufClp) * 100) / 100
       : null;
 
   if (comps.length === 0) {
@@ -112,7 +122,7 @@ export default function RentalCompsTable({ comps, btl, propertyLat, propertyLng,
       {/* List view */}
       {view === "list" && (
         <div className="rounded-lg border border-gray-200 overflow-hidden">
-          <div className="overflow-x-auto">
+          <div className="max-h-[360px] overflow-y-auto overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide sticky top-0 z-10">
                 <tr>
@@ -135,27 +145,40 @@ export default function RentalCompsTable({ comps, btl, propertyLat, propertyLng,
                           {i + 1}
                         </td>
                         <td className="px-2 py-2 max-w-[7rem]">
-                          <p className="text-xs font-bold text-teal-700 truncate">Propiedad en Venta</p>
+                          <p className="text-xs font-bold text-teal-700 leading-tight">Propiedad</p>
+                          <p className="text-xs font-bold text-teal-700 leading-tight">en venta</p>
                         </td>
                         <td className="px-2 py-2 text-right tabular-nums text-teal-700 text-xs font-medium">
                           {saleUsefulAreaM2 != null ? formatArea(saleUsefulAreaM2) : "—"}
                         </td>
-                        <td className="px-2 py-2 text-right text-teal-600 text-xs">—</td>
+                        <td className="px-2 py-2 text-right text-teal-700 text-xs font-medium">
+                          {saleBedrooms ?? "—"}
+                        </td>
                         <td className="px-2 py-2 text-right tabular-nums">
                           <p className="text-xs font-semibold text-teal-700">{formatCLP(compsMedianRent)}</p>
-                          <p className="text-xs text-teal-500">Mediana comps</p>
+                          {saleRentUF != null && (
+                            <p className="text-xs text-teal-500">
+                              UF {saleRentUF.toLocaleString("es-CL", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
+                            </p>
+                          )}
                         </td>
                         <td className="px-2 py-2 text-right tabular-nums">
                           {saleRentPerM2 != null ? (
-                            <p className="text-xs font-semibold text-teal-700">{formatCLP(saleRentPerM2)}/m²</p>
+                            <>
+                              <p className="text-xs font-semibold text-teal-700">{formatCLP(saleRentPerM2)}/m²</p>
+                              {saleRentPerM2UF != null && (
+                                <p className="text-xs text-teal-500">
+                                  UF {saleRentPerM2UF.toLocaleString("es-CL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/m²
+                                </p>
+                              )}
+                            </>
                           ) : (
                             <span className="text-xs text-teal-300">—</span>
                           )}
                         </td>
-                        <td className="px-2 py-2 text-right">
-                          <span className="text-xs text-teal-500 italic">← mediana</span>
+                        <td colSpan={2} className="px-2 py-2 text-right">
+                          <span className="text-xs text-teal-600 font-medium">← mediana comparables</span>
                         </td>
-                        <td className="px-2 py-2 text-xs text-teal-300">—</td>
                       </tr>
                     );
                   }
