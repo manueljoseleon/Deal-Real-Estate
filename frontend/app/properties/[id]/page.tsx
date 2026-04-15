@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
-import { computeMedianRentFromComps } from "@/lib/btl";
+import { filterOutlierComps, computeMedianRentFromComps } from "@/lib/btl";
 import type { PropertyDetail } from "@/types";
 import { formatUF, formatCLP, formatArea, formatStandardTitle, formatPortal } from "@/lib/formatters";
 import BTLSummary from "@/components/analysis/BTLSummary";
@@ -151,8 +151,9 @@ export default async function PropertyDetailPage({ params }: Props) {
     notFound();
   }
 
-  // Compute estimated rent from displayed comps — always consistent with what user sees.
-  const compsMedianRent = computeMedianRentFromComps(comps);
+  // Remove IQR outliers first, then compute median from the clean set.
+  const filteredComps = filterOutlierComps(comps);
+  const compsMedianRent = computeMedianRentFromComps(filteredComps);
 
   const standardTitle = formatStandardTitle(property.property_type, property.bedrooms, property.commune);
 
@@ -277,7 +278,7 @@ export default async function PropertyDetailPage({ params }: Props) {
               btl={property.btl}
               price_clp={property.price_clp}
               price_uf={property.price_uf}
-              compsCount={comps.length}
+              compsCount={filteredComps.length}
               compsMedianRent={compsMedianRent}
               narrativeText={narrativeText}
               reviewTrigger={
@@ -293,7 +294,7 @@ export default async function PropertyDetailPage({ params }: Props) {
             />
 
             <RentalCompsTable
-              comps={comps}
+              comps={filteredComps}
               btl={property.btl}
               propertyLat={property.lat}
               propertyLng={property.lng}

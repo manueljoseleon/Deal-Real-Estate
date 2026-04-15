@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
-import { computeMedianRentFromComps } from "@/lib/btl";
+import { filterOutlierComps, computeMedianRentFromComps } from "@/lib/btl";
 import DealAnalyzerClient from "@/components/analysis/DealAnalyzerClient";
 
 interface Props {
@@ -21,7 +21,7 @@ export default async function AnalyzePage({ params, searchParams }: Props) {
       api.properties.comps(id).catch(() => []),
     ]);
     property = prop;
-    compsMedianRent = computeMedianRentFromComps(compsResult);
+    compsMedianRent = computeMedianRentFromComps(filterOutlierComps(compsResult));
   } catch {
     notFound();
   }

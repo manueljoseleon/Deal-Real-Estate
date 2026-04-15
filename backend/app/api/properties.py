@@ -105,6 +105,7 @@ def list_properties(
         Property.gross_yield_pct <= 20,
         Property.matching_tier.isnot(None),
         ~Property.matching_tier.in_([6, 7]),
+        ~Property.btl_anomalous.is_(True),
     )
 
     if commune:
@@ -173,6 +174,7 @@ def list_map_pins(
         Property.is_active == True,
         Property.useful_area_m2.isnot(None),
         Property.lat.isnot(None),
+        ~Property.btl_anomalous.is_(True),
     )
 
     if commune:

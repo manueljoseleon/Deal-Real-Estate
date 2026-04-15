@@ -59,6 +59,9 @@ class Property(Base):
     zone_avg_price_uf_per_m2_same_type = Column(Numeric(10, 2))  # avg UF/m2 same bedrooms+area within 1.5km
     zone_avg_sample_count = Column(SmallInteger)             # number of properties used for zone_avg
 
+    # BTL quality flags
+    btl_anomalous = Column(Boolean, default=False)  # estimated rent > max comp rent after IQR filter
+
     # Deduplication
     cluster_id = Column(UUID(as_uuid=True), ForeignKey("property_clusters.id"), nullable=True)
     is_canonical = Column(Boolean, nullable=False, default=True)
