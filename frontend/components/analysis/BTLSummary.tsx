@@ -31,14 +31,13 @@ export default function BTLSummary({ btl, price_clp, price_uf, usefulAreaM2, com
     );
   }
 
-  // Use live-computed median from displayed comps when available — always consistent with table
+  // Estimated rent: live-computed from IQR-filtered displayed comps (fresher than DB).
+  // Cap rate: always use the stored DB value so dashboard and detail page show the
+  // same number. The DB value is kept in sync by POST /analysis/recalculate which
+  // also applies IQR, so both figures are consistent after each run.
   const estimatedRent = compsMedianRent ?? btl.estimated_monthly_rent_clp;
   const annualRent = estimatedRent ? estimatedRent * 12 : null;
-
-  // Recompute yield from live rent if compsMedianRent is available
-  const grossYield = (compsMedianRent != null && price_clp != null && price_clp > 0)
-    ? Math.round((compsMedianRent * 12 / price_clp) * 10000) / 100
-    : btl.gross_yield_pct;
+  const grossYield = btl.gross_yield_pct;
   const yieldBand = grossYield >= 7 ? "excellent" : grossYield >= 5 ? "good" : grossYield >= 3 ? "moderate" : "weak";
   const style = bandStyle[yieldBand];
 

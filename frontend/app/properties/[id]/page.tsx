@@ -165,14 +165,9 @@ export default async function PropertyDetailPage({ params }: Props) {
 
   const hasLocation = property.lat != null && property.lng != null;
 
-  // Use live-computed cap rate (IQR-filtered comps) to stay consistent with
-  // what BTLSummary displays. Fall back to the stored DB value only when
-  // comps or price are unavailable.
-  const storedCapRate = property.btl?.gross_yield_pct ?? null;
-  const capRate =
-    compsMedianRent != null && property.price_clp != null && property.price_clp > 0
-      ? Math.round((compsMedianRent * 12 / property.price_clp) * 10000) / 100
-      : storedCapRate;
+  // Use the stored DB cap rate so dashboard and detail page always show the
+  // same number. The DB value is updated (with IQR) by /analysis/recalculate.
+  const capRate = property.btl?.gross_yield_pct ?? null;
 
   const cta = buildCtaTier(capRate, vsZona, property.commune);
 
