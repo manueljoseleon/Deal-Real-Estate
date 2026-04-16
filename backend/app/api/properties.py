@@ -15,6 +15,7 @@ from pydantic import BaseModel, field_validator
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from backend.app.config import settings
 from backend.app.database import get_db
 from backend.app.models.property import Property
 from backend.app.models.rental_comp import RentalComp
@@ -106,6 +107,7 @@ def list_properties(
         Property.matching_tier.isnot(None),
         ~Property.matching_tier.in_([6, 7]),
         ~Property.btl_anomalous.is_(True),
+        Property.comparable_rent_count >= settings.matching_min_comps,
     )
 
     if commune:
@@ -175,6 +177,7 @@ def list_map_pins(
         Property.useful_area_m2.isnot(None),
         Property.lat.isnot(None),
         ~Property.btl_anomalous.is_(True),
+        Property.comparable_rent_count >= settings.matching_min_comps,
     )
 
     if commune:

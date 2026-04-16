@@ -25,7 +25,7 @@ load_dotenv(os.path.join(os.path.dirname(__file__), "../../.env"))
 
 from backend.app.database import SessionLocal
 from backend.app.models.property import Property
-from backend.app.services.matching import find_rental_comps, compute_zone_avg
+from backend.app.services.matching import find_rental_comps, compute_zone_avg, _iqr_filter
 from backend.app.services.btl_calculator import calculate_btl_summary
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
@@ -79,20 +79,25 @@ def process_batch(ids: list[str]) -> tuple[int, int]:
     try:
         props = db.query(Property).filter(Property.id.in_(ids)).all()
         for prop in props:
-            rents, tier = find_rental_comps(db, prop)
+            rents, raw_rents, tier = find_rental_comps(db, prop)
+            filtered_rents = _iqr_filter(rents)
             summary = calculate_btl_summary(
                 price_clp=prop.price_clp,
                 price_uf=float(prop.price_uf) if prop.price_uf else None,
                 useful_area_m2=float(prop.useful_area_m2) if prop.useful_area_m2 else None,
-                rent_values=rents,
+                rent_values=filtered_rents,
             )
             prop.gross_yield_pct = summary["gross_yield_pct"]
             prop.estimated_monthly_rent_clp = summary["estimated_monthly_rent_clp"]
             prop.comparable_rent_count = summary["comparable_rent_count"]
             prop.price_per_m2_clp = summary["price_per_m2_clp"]
             prop.matching_tier = tier
+            estimated = summary["estimated_monthly_rent_clp"]
+            prop.btl_anomalous = bool(
+                estimated and raw_rents and estimated > max(raw_rents)
+            )
             compute_zone_avg(db, prop)
-            if rents:
+            if filtered_rents:
                 updated += 1
             else:
                 no_comps += 1

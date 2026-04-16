@@ -5,6 +5,7 @@ Pairs each sale property with comparable rental listings using a 6-tier
 strategy: tight geo → broad geo → commune fallback. Requires PostGIS.
 """
 import logging
+import statistics
 from datetime import datetime
 from sqlalchemy import text
 from sqlalchemy.orm import Session
@@ -14,6 +15,27 @@ from backend.app.config import settings
 logger = logging.getLogger(__name__)
 from backend.app.models.property import Property
 from backend.app.services.btl_calculator import calculate_btl_summary
+
+
+def _iqr_filter(values: list[int]) -> list[int]:
+    """
+    Iterative IQR outlier removal (up to 3 rounds).
+    Guards: needs ≥ 4 values to compute quartiles; never drops below 3.
+    Mirrors the frontend filterOutlierComps logic in frontend/lib/btl.ts.
+    """
+    current = list(values)
+    for _ in range(3):
+        if len(current) < 4:
+            break
+        qs = statistics.quantiles(current, n=4)  # [Q1, median, Q3]
+        q1, q3 = qs[0], qs[2]
+        iqr = q3 - q1
+        lo, hi = q1 - 1.5 * iqr, q3 + 1.5 * iqr
+        filtered = [v for v in current if lo <= v <= hi]
+        if len(filtered) == len(current) or len(filtered) < 3:
+            break
+        current = filtered
+    return current
 
 
 # SQL template for PostGIS radius search
@@ -86,10 +108,16 @@ def _build_commune_query(bedrooms_mode: str, area_tol: float | None) -> str:
     return _COMMUNE_QUERY.format(bedrooms_filter=bedrooms_filter, area_filter=area_filter)
 
 
-def find_rental_comps(db: Session, prop: Property) -> tuple[list[int], int]:
+def find_rental_comps(db: Session, prop: Property) -> tuple[list[int], list[int], int]:
     """
     Find rental comps for a sale property using tiered matching.
-    Returns (list_of_rent_values, matching_tier).
+    Returns (normalized_rents, raw_rents, matching_tier).
+
+    normalized_rents: rent values scaled to the sale property's area ($/m² × area).
+    raw_rents: the actual rent_clp values from the comp listings (unscaled).
+    Both lists are parallel — same comps, same order.
+    raw_rents is used for the btl_anomalous check: if the area-normalized estimate
+    exceeds the highest raw comp rent the estimate is likely inflated.
     """
     has_location = prop.lat is not None and prop.lng is not None and prop.location is not None
     bedrooms = prop.bedrooms or 0
@@ -156,21 +184,24 @@ def find_rental_comps(db: Session, prop: Property) -> tuple[list[int], int]:
         # Normalize rents by $/m2 when both property and comp have area.
         # This ensures a 50m2 comp is not directly compared to a 150m2 property.
         # If either side is missing area, fall back to raw rent.
-        rents = []
+        rents: list[int] = []
+        raw_rents: list[int] = []
         for rent, comp_area in deduped_rows:
             if area and comp_area:
                 # Both property and comp have area: normalize to property size
                 rents.append(int((rent / float(comp_area)) * area))
+                raw_rents.append(rent)
             elif not area:
                 # Property has no area: can't normalize, use raw rent
                 rents.append(rent)
+                raw_rents.append(rent)
             # else: property has area but comp doesn't → skip
             # (can't normalize meaningfully; NULL-area comps are likely different sizes)
 
         if len(rents) >= settings.matching_min_comps:
-            return rents, tier_idx
+            return rents, raw_rents, tier_idx
 
-    return [], len(_TIERS)  # No comps found at all tiers
+    return [], [], len(_TIERS)  # No comps found at all tiers
 
 
 def compute_zone_avg(db: Session, prop: "Property") -> bool:
@@ -238,13 +269,17 @@ def run_btl_matching(db: Session, property_ids: list | None = None) -> dict:
         if not prop.price_clp:
             continue
 
-        rents, tier = find_rental_comps(db, prop)
+        rents, raw_rents, tier = find_rental_comps(db, prop)
+
+        # Apply IQR outlier removal before computing the summary — mirrors the
+        # frontend filterOutlierComps logic so dashboard and detail page yield match.
+        filtered_rents = _iqr_filter(rents)
 
         summary = calculate_btl_summary(
             price_clp=prop.price_clp,
             price_uf=float(prop.price_uf) if prop.price_uf else None,
             useful_area_m2=float(prop.useful_area_m2) if prop.useful_area_m2 else None,
-            rent_values=rents,
+            rent_values=filtered_rents,
         )
 
         prop.gross_yield_pct = summary["gross_yield_pct"]
@@ -253,10 +288,17 @@ def run_btl_matching(db: Session, property_ids: list | None = None) -> dict:
         prop.price_per_m2_clp = summary["price_per_m2_clp"]
         prop.matching_tier = tier
 
+        # btl_anomalous: estimated rent (area-normalised) exceeds the highest
+        # raw comp rent → the normalisation is inflating an unrealistic estimate.
+        estimated = summary["estimated_monthly_rent_clp"]
+        prop.btl_anomalous = bool(
+            estimated and raw_rents and estimated > max(raw_rents)
+        )
+
         # Zone avg UF/m2: avg price per m2 of nearby sale properties (1.5km radius)
         compute_zone_avg(db, prop)
 
-        if rents:
+        if filtered_rents:
             updated += 1
         else:
             no_comps += 1
