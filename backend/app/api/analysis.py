@@ -10,7 +10,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from backend.app.database import get_db
+from backend.app.database import get_db, SessionLocal
 from backend.app.models.property import Property
 from backend.app.services.matching import run_btl_matching, compute_zone_avg
 
@@ -100,13 +100,22 @@ def repair_zone_avg(db: Session = Depends(get_db)):
     }
 
 
+def _run_recalculate(property_ids: list[str] | None) -> None:
+    """Background task: creates its own DB session so the request session
+    closing after the response doesn't kill the long-running job."""
+    db = SessionLocal()
+    try:
+        run_btl_matching(db, property_ids)
+    finally:
+        db.close()
+
+
 @router.post("/analysis/recalculate")
 def recalculate(
     background_tasks: BackgroundTasks,
-    db: Session = Depends(get_db),
     property_ids: list[str] | None = None,
 ):
     """Trigger BTL matching re-run in the background. Optionally restrict to specific property IDs."""
-    background_tasks.add_task(run_btl_matching, db, property_ids or None)
+    background_tasks.add_task(_run_recalculate, property_ids or None)
     scope = f"{len(property_ids)} properties" if property_ids else "all properties"
     return {"status": "started", "message": f"BTL matching recalculation queued for {scope}"}
