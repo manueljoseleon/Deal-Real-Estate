@@ -169,6 +169,63 @@ Cualquier comuna en la DB que no esté en `zones.ts` está afectada.
 **Comunas con datos al 2026-04-04:**
 Providencia, Las Condes, Ñuñoa, Santiago, Vitacura, San Miguel, Maipú, Quilicura, Lo Barnechea, La Florida.
 
+## Cambios en fórmulas o algoritmos de cálculo (CRÍTICO — auditoría obligatoria)
+
+Cuando se modifica cómo se calcula cualquier métrica mostrada al usuario (cap rate, yield, renta estimada, precio, $/m², etc.):
+
+1. **Grep todos los consumidores antes de tocar el código:**
+   ```bash
+   grep -rn "gross_yield_pct\|capRate\|compsMedianRent\|estimatedRent" frontend/ backend/
+   ```
+   Identificar TODOS los lugares que leen o muestran ese valor — no solo el componente que se está editando.
+
+2. **Actualizar todos los consumidores en el mismo commit.** Un cambio de algoritmo parcial (solo algunos componentes actualizados) garantiza inconsistencias visibles para el usuario.
+
+3. **Backend y frontend deben usar el mismo algoritmo.** Si difieren, la página de detalle mostrará un número distinto al dashboard. Documentar explícitamente si hay una razón para diferir.
+
+4. **Verificar cross-page consistency** antes de declarar el cambio listo:
+   - Dashboard card → `property.btl.gross_yield_pct` (DB)
+   - Detalle: número grande BTLSummary → puede recomputar en vivo
+   - Detalle: texto narrativo y CTA → `capRate` en `page.tsx`
+   - Detalle: página de análisis (`/analyze`)
+   - Cualquiera de estos mostrando un valor distinto = bug
+
+**Métricas BTL y sus consumidores en este proyecto:**
+| Métrica | Dónde aparece |
+|---|---|
+| `gross_yield_pct` / `capRate` | Dashboard card, BTL summary (hero), texto narrativo, CTA block, analyze page |
+| `compsMedianRent` / `estimated_monthly_rent_clp` | BTL summary, comps table fila de venta, texto narrativo |
+| `comparable_rent_count` | Filtro de dashboard, tooltip de BTL summary |
+
+**Post-mortem abril 2026:** IQR filtering se implementó solo en frontend `BTLSummary` pero no en `buildNarrativeText`/`buildCtaTier` (misma página) ni en el backend. Resultado: 3 cap rates distintos en el sitio para la misma propiedad.
+
+---
+
+## CSS de librerías externas: cada componente es responsable de sus propios estilos
+
+Cuando un componente usa una librería que requiere CSS (Leaflet, chart libraries, etc.):
+
+1. **El CSS DEBE importarse en el mismo componente**, no en otro componente que "probablemente ya lo cargó":
+   ```tsx
+   // CORRECTO — el componente es autocontenido
+   import "leaflet/dist/leaflet.css";
+   import { MapContainer } from "react-leaflet";
+   ```
+
+2. **Nunca asumir que otro componente en otra ruta ya cargó el CSS.** En producción Next.js hace code-splitting por ruta. Si el CSS solo está en `ComponenteA.tsx` y el usuario navega directamente a una ruta que usa `ComponenteB.tsx`, el CSS no estará disponible.
+
+3. **Al crear o modificar un componente con Leaflet**, verificar que los tres archivos lo importen:
+   ```bash
+   grep -rn "leaflet/dist/leaflet.css" frontend/
+   # Debe aparecer en CADA archivo que importe react-leaflet o leaflet directamente
+   ```
+
+4. **Antes de diagnosticar un bug de rendering en un mapa** (tiles mal posicionados, mapa "cortado", tiles en esquina), primero verificar que el CSS esté importado. Es la causa más común y se detecta con un grep.
+
+**Post-mortem abril 2026:** `PropertyLocationMap.tsx` y `CompsMap.tsx` nunca tuvieron el import. Solo `PropertiesMap.tsx` lo tenía. En dev el CSS se sirve junto y el bug no se manifestaba. En producción, usuarios que no habían visitado la página de mercado veían mapas cortados. El diagnóstico tardó 3 commits por no hacer el grep inicial.
+
+---
+
 ## Servidores locales
 
 - Backend: puerto activo definido en `frontend/.env.local` (`NEXT_PUBLIC_API_URL`)
