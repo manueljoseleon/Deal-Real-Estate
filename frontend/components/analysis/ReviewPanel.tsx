@@ -388,7 +388,7 @@ export default function ReviewPanel({
             <Section title="¿Y cuánto puedo ganar?">
               <div className="px-5 py-2.5 bg-gray-50/60 border-b border-gray-100">
                 <p className="text-xs text-gray-500">
-                  Estimación realizada con 10 años de inversión y apreciación de UF+2%. Para simular con más detalle ingresa a{" "}
+                  Estimación realizada con 10 años de inversión y apreciación anual de UF+2%. Para simular con más detalle ingresa a{" "}
                   <Link href={`/properties/${propertyId}/analyze?uf=${ufClp}`} className="text-teal-700 hover:underline font-medium">Calculadora Financiera</Link>
                 </p>
               </div>
