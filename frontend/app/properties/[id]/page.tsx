@@ -262,7 +262,9 @@ export default async function PropertyDetailPage({ params }: Props) {
             {property.description && (
               <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
                 <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Descripción</h2>
-                <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">{property.description}</p>
+                <div className="max-h-48 overflow-y-auto pr-1">
+                  <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">{property.description}</p>
+                </div>
               </div>
             )}
 
