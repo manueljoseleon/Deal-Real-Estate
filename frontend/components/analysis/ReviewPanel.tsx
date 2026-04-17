@@ -312,7 +312,7 @@ export default function ReviewPanel({
                       <th className="text-right px-5 py-3 text-xs font-semibold text-teal-700 uppercase tracking-wide">
                         <span className="inline-flex items-center gap-1 justify-end">
                           Con Deuda
-                          <InlineTooltip message={`Deuda estimada de ${leveredLtv}% del valor de la propiedad, considerando pago de dividendos con flujos de arriendo`} />
+                          <InlineTooltip message={<>Deuda estimada de {leveredLtv}% del valor de la propiedad, considerando pago de dividendos con flujos de arriendo. Plazo estimado 20 años con tasa UF+4.5%. Para simular con más detalle ingresa a{" "}<Link href={`/properties/${propertyId}/analyze?uf=${ufClp}`} className="underline text-teal-300 hover:text-teal-100">Calculadora Financiera</Link></>} />
                         </span>
                       </th>
                     </tr>
@@ -386,6 +386,12 @@ export default function ReviewPanel({
           {/* ── 3. ¿Y cuánto puedo ganar? ── */}
           {levered && unlevered && (
             <Section title="¿Y cuánto puedo ganar?">
+              <div className="px-5 py-2.5 bg-gray-50/60 border-b border-gray-100">
+                <p className="text-xs text-gray-500">
+                  Estimación realizada con 10 años de inversión y apreciación de UF+2%. Para simular con más detalle ingresa a{" "}
+                  <Link href={`/properties/${propertyId}/analyze?uf=${ufClp}`} className="text-teal-700 hover:underline font-medium">Calculadora Financiera</Link>
+                </p>
+              </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
@@ -397,7 +403,7 @@ export default function ReviewPanel({
                       <th className="text-right px-5 py-3 text-xs font-semibold text-teal-700 uppercase tracking-wide">
                         <span className="inline-flex items-center gap-1 justify-end">
                           Con Deuda
-                          <InlineTooltip message={`Deuda estimada de ${leveredLtv}% del valor de la propiedad, considerando pago de dividendos con flujos de arriendo`} />
+                          <InlineTooltip message={<>Deuda estimada de {leveredLtv}% del valor de la propiedad, considerando pago de dividendos con flujos de arriendo. Plazo estimado 20 años con tasa UF+4.5%. Para simular con más detalle ingresa a{" "}<Link href={`/properties/${propertyId}/analyze?uf=${ufClp}`} className="underline text-teal-300 hover:text-teal-100">Calculadora Financiera</Link></>} />
                         </span>
                       </th>
                     </tr>
@@ -700,7 +706,7 @@ function MetricRow({
  * Small "?" badge in table headers that reveals a popover on click.
  * Used inside <th> elements — no absolute positioning issues.
  */
-function InlineTooltip({ message }: { message: string }) {
+function InlineTooltip({ message }: { message: React.ReactNode }) {
   const [show, setShow] = useState(false);
   return (
     <span className="relative inline-block">
@@ -713,7 +719,7 @@ function InlineTooltip({ message }: { message: string }) {
         ?
       </button>
       {show && (
-        <span className="absolute right-0 top-5 z-30 w-56 p-2.5 bg-gray-900 text-white text-xs rounded-lg shadow-xl normal-case font-normal whitespace-normal text-left">
+        <span className="absolute right-0 top-5 z-30 w-64 p-2.5 bg-gray-900 text-white text-xs rounded-lg shadow-xl normal-case font-normal whitespace-normal text-left">
           <button
             onClick={() => setShow(false)}
             className="absolute top-1 right-2 text-gray-400 hover:text-white text-sm leading-none"
