@@ -28,6 +28,9 @@ const josefin = Josefin_Sans({
 export const metadata: Metadata = {
   title: "Deal Inmobiliario",
   description: "Análisis BTL de propiedades en Chile",
+  icons: {
+    icon: "/Logo.webp",
+  },
 };
 
 export default function RootLayout({
