@@ -11,6 +11,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from backend.app.api.deps import require_admin
 from backend.app.config import settings
 from backend.app.database import get_db
 from backend.app.models.scrape_run import ScrapeRun
@@ -114,7 +115,7 @@ async def _run_scrape(
         db.close()
 
 
-@router.post("/scraper/trigger")
+@router.post("/scraper/trigger", dependencies=[Depends(require_admin)])
 def trigger_scrape(
     request: ScrapeRequest,
     background_tasks: BackgroundTasks,

@@ -41,10 +41,17 @@ async function getCached<T>(path: string, params?: Record<string, string | strin
   return res.json();
 }
 
+function adminHeaders(): Record<string, string> {
+  const key = typeof window !== "undefined"
+    ? (sessionStorage.getItem("admin_api_key") ?? "")
+    : "";
+  return key ? { "X-Admin-Key": key } : {};
+}
+
 async function post<T>(path: string, body: unknown): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...adminHeaders() },
     body: JSON.stringify(body),
     cache: "no-store",
   });
@@ -98,7 +105,7 @@ export const api = {
     patch: (id: string, body: { useful_area_m2?: number | null; total_area_m2?: number | null; lat?: number | null; lng?: number | null }) =>
       fetch(`${BASE}/properties/${id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...adminHeaders() },
         body: JSON.stringify(body),
         cache: "no-store",
       }).then(async (r) => {

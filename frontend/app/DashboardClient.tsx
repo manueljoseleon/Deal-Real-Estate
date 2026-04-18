@@ -63,7 +63,7 @@ export default function DashboardClient({ initialData }: Props) {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    setIsAdmin(sessionStorage.getItem("admin_auth") === "1");
+    setIsAdmin(!!sessionStorage.getItem("admin_api_key"));
   }, []);
 
   useEffect(() => {

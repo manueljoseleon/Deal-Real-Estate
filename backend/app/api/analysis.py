@@ -10,6 +10,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from backend.app.api.deps import require_admin
 from backend.app.database import get_db, SessionLocal
 from backend.app.models.property import Property
 from backend.app.services.matching import run_btl_matching, compute_zone_avg
@@ -60,7 +61,7 @@ def analysis_summary(db: Session = Depends(get_db)):
     ]
 
 
-@router.post("/analysis/repair-zone-avg")
+@router.post("/analysis/repair-zone-avg", dependencies=[Depends(require_admin)])
 def repair_zone_avg(db: Session = Depends(get_db)):
     """
     Fill in zone_avg_price_uf_per_m2 for all active canonical properties that are
@@ -110,7 +111,7 @@ def _run_recalculate(property_ids: list[str] | None) -> None:
         db.close()
 
 
-@router.post("/analysis/recalculate")
+@router.post("/analysis/recalculate", dependencies=[Depends(require_admin)])
 def recalculate(
     background_tasks: BackgroundTasks,
     property_ids: list[str] | None = None,

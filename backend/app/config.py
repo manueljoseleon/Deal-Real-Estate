@@ -13,6 +13,9 @@ class Settings(BaseSettings):
     app_version: str = "0.1.0"
     debug: bool = False
 
+    # Admin auth — set ADMIN_API_KEY in Railway; empty string disables protection (dev only)
+    admin_api_key: str = ""
+
     # CORS — JSON array in env var: CORS_ORIGINS=["https://your-app.vercel.app"]
     # Multiple origins: ["https://app.vercel.app","https://custom-domain.com"]
     # Empty string or missing var → falls back to localhost

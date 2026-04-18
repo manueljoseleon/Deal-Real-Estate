@@ -15,6 +15,7 @@ from pydantic import BaseModel, field_validator
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from backend.app.api.deps import require_admin
 from backend.app.config import settings
 from backend.app.database import get_db
 from backend.app.models.property import Property
@@ -266,7 +267,7 @@ class PropertyPatch(BaseModel):
         return v
 
 
-@router.patch("/properties/{property_id}", response_model=PropertyDetail)
+@router.patch("/properties/{property_id}", response_model=PropertyDetail, dependencies=[Depends(require_admin)])
 def patch_property(property_id: UUID, body: PropertyPatch, db: Session = Depends(get_db)):
     """
     Manual data correction for a property (area, coordinates).

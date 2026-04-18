@@ -2,31 +2,28 @@
 
 import { useEffect, useState } from "react";
 
-const STORAGE_KEY = "admin_auth";
+const STORAGE_KEY = "admin_api_key";
+
+export function getAdminKey(): string {
+  if (typeof window === "undefined") return "";
+  return sessionStorage.getItem(STORAGE_KEY) ?? "";
+}
 
 export default function AdminGate({ children }: { children: React.ReactNode }) {
-  // null = still checking sessionStorage (pre-hydration — avoid lock screen flash)
-  // true  = authenticated
-  // false = not authenticated → show lock screen
   const [authed, setAuthed] = useState<boolean | null>(null);
   const [input, setInput] = useState("");
   const [error, setError] = useState(false);
 
   useEffect(() => {
     const stored = sessionStorage.getItem(STORAGE_KEY);
-    setAuthed(stored === "1");
+    setAuthed(!!stored);
   }, []);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const expected = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
-    if (expected && input === expected) {
-      sessionStorage.setItem(STORAGE_KEY, "1");
-      setAuthed(true);
-    } else {
-      setError(true);
-      setInput("");
-    }
+    if (!input.trim()) return;
+    sessionStorage.setItem(STORAGE_KEY, input.trim());
+    setAuthed(true);
   }
 
   // Pre-hydration: render nothing to avoid flash of lock screen for authed sessions
@@ -39,7 +36,7 @@ export default function AdminGate({ children }: { children: React.ReactNode }) {
           <div className="text-center space-y-1">
             <p className="text-2xl">🔒</p>
             <h1 className="text-lg font-semibold text-gray-900">Área de administración</h1>
-            <p className="text-sm text-gray-500">Ingresa la contraseña para continuar</p>
+            <p className="text-sm text-gray-500">Ingresa el API key de administrador</p>
           </div>
           <form onSubmit={handleSubmit} className="space-y-3">
             <input
@@ -47,11 +44,11 @@ export default function AdminGate({ children }: { children: React.ReactNode }) {
               autoFocus
               value={input}
               onChange={(e) => { setInput(e.target.value); setError(false); }}
-              placeholder="Contraseña"
+              placeholder="Admin API key"
               className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
             />
             {error && (
-              <p className="text-xs text-red-500">Contraseña incorrecta.</p>
+              <p className="text-xs text-red-500">Key incorrecta — verificá el valor en Railway.</p>
             )}
             <button
               type="submit"
