@@ -310,6 +310,49 @@ function HeroSection() {
   );
 }
 
+// ─── Section: Explainer Video ────────────────────────────────────────────────
+function HowItWorksVideoSection() {
+  return (
+    <section className="py-20 px-6">
+      <div className="max-w-4xl mx-auto">
+        <Reveal className="text-center mb-10">
+          <span className="text-teal-400 text-xs font-semibold tracking-widest uppercase">
+            Cómo funciona
+          </span>
+          <h2
+            className="mt-3 text-4xl md:text-5xl font-bold text-white leading-tight"
+            style={{ fontFamily: "var(--font-cormorant)" }}
+          >
+            Mira cómo funciona
+            <br />
+            <span className="text-teal-400">en 2 minutos</span>
+          </h2>
+          <p
+            className="mt-4 text-slate-400 text-base max-w-xl mx-auto"
+            style={{ fontFamily: "var(--font-josefin)" }}
+          >
+            Desde buscar una propiedad hasta analizar su rentabilidad — así de simple.
+          </p>
+        </Reveal>
+
+        <Reveal delay={150}>
+          <div className="rounded-3xl overflow-hidden border border-slate-700/50 shadow-2xl">
+            <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
+              <iframe
+                src="https://www.youtube.com/embed/qUHL17dj6rY?rel=0&modestbranding=1"
+                className="absolute inset-0 w-full h-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                title="Cómo funciona Deal Inmobiliario"
+              />
+            </div>
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
 // ─── Section: AI Value Prop ───────────────────────────────────────────────────
 function ValuePropSection() {
   const bullets = [
@@ -721,6 +764,29 @@ function ClosingCTASection() {
 function Footer() {
   return (
     <footer className="py-8 px-6 border-t border-slate-800 text-center">
+      <div className="flex items-center justify-center gap-6 mb-3">
+        <a
+          href="/metodologia"
+          className="text-slate-500 hover:text-slate-300 text-xs tracking-wider transition-colors"
+          style={{ fontFamily: "var(--font-josefin)" }}
+        >
+          Metodología
+        </a>
+        <a
+          href="/aprende"
+          className="text-slate-500 hover:text-slate-300 text-xs tracking-wider transition-colors"
+          style={{ fontFamily: "var(--font-josefin)" }}
+        >
+          Aprende
+        </a>
+        <a
+          href="/oportunidades"
+          className="text-slate-500 hover:text-slate-300 text-xs tracking-wider transition-colors"
+          style={{ fontFamily: "var(--font-josefin)" }}
+        >
+          Oportunidades
+        </a>
+      </div>
       <p
         className="text-slate-600 text-xs tracking-wider"
         style={{ fontFamily: "var(--font-josefin)" }}
@@ -760,6 +826,7 @@ export default function LandingPage() {
 
       <main>
         <HeroSection />
+        <HowItWorksVideoSection />
         <ValuePropSection />
         <SpeedSection />
         <MarketSection />
