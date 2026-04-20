@@ -53,7 +53,7 @@ interface Props {
 
 export default function PropertyLocationMap({ lat, lng, label }: Props) {
   return (
-    <div className="rounded-xl border border-gray-200 overflow-hidden shadow-sm relative" style={{ height: 280 }}>
+    <div className="rounded-xl border border-gray-200 overflow-hidden shadow-sm relative" style={{ height: 280, isolation: "isolate" }}>
       <MapContainer
         center={[lat, lng]}
         zoom={15}

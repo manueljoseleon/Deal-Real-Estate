@@ -69,7 +69,7 @@ export default function CompsMap({ comps, propertyLat, propertyLng, medianCompId
   ];
 
   return (
-    <div className="rounded-lg border border-gray-200 overflow-hidden" style={{ height: 380 }}>
+    <div className="rounded-lg border border-gray-200 overflow-hidden" style={{ height: 380, isolation: "isolate" }}>
       <MapContainer
         center={[propertyLat, propertyLng]}
         zoom={14}
