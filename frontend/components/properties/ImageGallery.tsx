@@ -87,7 +87,7 @@ export default function ImageGallery({ images, alt }: Props) {
       {/* Lightbox */}
       {lightboxIdx !== null && (
         <div
-          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center"
+          className="fixed inset-0 z-[2000] bg-black/90 flex items-center justify-center"
           onClick={closeLightbox}
         >
           {/* Counter */}
