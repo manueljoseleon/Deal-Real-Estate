@@ -1,7 +1,19 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { api } from "@/lib/api";
 import DashboardClient from "@/app/DashboardClient";
 import type { PropertyListResponse } from "@/types";
+
+export const metadata: Metadata = {
+  title: "Oportunidades de inversión",
+  description:
+    "Compara cap rate, yield y flujo de caja de propiedades para invertir en Las Condes, Providencia, Ñuñoa y más comunas de Santiago. Datos actualizados.",
+  openGraph: {
+    title: "Oportunidades de inversión inmobiliaria en Santiago",
+    description:
+      "Filtra por cap rate, precio y comuna. Encuentra los departamentos más rentables para comprar y arrendar en Santiago.",
+  },
+};
 
 // Next.js 15+ passes searchParams as a Promise
 type PageProps = {

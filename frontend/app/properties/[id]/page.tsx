@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
@@ -30,6 +31,49 @@ function formatTimeAgo(dateStr: string): string {
 
 interface Props {
   params: Promise<{ id: string }>;
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
+  try {
+    const property = await api.properties.get(id);
+    const title = formatStandardTitle(
+      property.property_type,
+      property.bedrooms,
+      property.commune
+    );
+    const capRate = property.btl?.gross_yield_pct;
+    const price = property.price_uf ? `${Math.round(property.price_uf).toLocaleString("es-CL")} UF` : null;
+    const area = property.useful_area_m2 ? `${property.useful_area_m2} m²` : null;
+
+    const descParts = [
+      price && `Precio: ${price}`,
+      area && `Área: ${area}`,
+      capRate != null && `Cap rate: ${capRate.toFixed(1)}%`,
+    ].filter(Boolean);
+
+    const description = `${property.commune} · ${descParts.join(" · ")}. Análisis BTL con comparables de arriendo.`;
+    const image = property.images?.[0];
+
+    return {
+      title,
+      description,
+      openGraph: {
+        title: `${title} · Deal Inmobiliario`,
+        description,
+        images: image ? [{ url: image, width: 1200, height: 630, alt: title }] : [],
+        type: "website",
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: `${title} · Deal Inmobiliario`,
+        description,
+        images: image ? [image] : [],
+      },
+    };
+  } catch {
+    return { title: "Propiedad" };
+  }
 }
 
 const pvLabels: Record<string, string> = {

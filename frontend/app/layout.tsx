@@ -3,8 +3,10 @@ import { Analytics } from "@vercel/analytics/next";
 import { Geist, Cormorant_Garamond, Josefin_Sans } from "next/font/google";
 import { NuqsAdapter } from "nuqs/adapters/next";
 import AppHeader from "@/components/AppHeader";
+import FeedbackWidget from "@/components/FeedbackWidget";
 import { HowItWorksProvider } from "@/contexts/HowItWorksContext";
 import HowItWorksModal from "@/components/HowItWorksModal";
+import { AuthProvider } from "@/contexts/AuthContext";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -25,9 +27,24 @@ const josefin = Josefin_Sans({
   weight: ["300", "400", "500", "600"],
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
 export const metadata: Metadata = {
-  title: "Deal Inmobiliario",
-  description: "Análisis BTL de propiedades en Chile",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "Deal Inmobiliario",
+    template: "%s · Deal Inmobiliario",
+  },
+  description:
+    "Encuentra propiedades para invertir en Santiago. Cap rate, yield y flujo de caja actualizados para Las Condes, Providencia, Ñuñoa y más comunas.",
+  openGraph: {
+    siteName: "Deal Inmobiliario",
+    locale: "es_CL",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+  },
   icons: {
     icon: "/Logo.webp",
   },
@@ -41,12 +58,15 @@ export default function RootLayout({
   return (
     <html lang="es" className={`${geistSans.variable} ${cormorant.variable} ${josefin.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-gray-50 text-gray-900">
-        <HowItWorksProvider>
-          <AppHeader />
-          <HowItWorksModal />
-          <NuqsAdapter>{children}</NuqsAdapter>
-          <Analytics />
-        </HowItWorksProvider>
+        <AuthProvider>
+          <HowItWorksProvider>
+            <AppHeader />
+            <HowItWorksModal />
+            <NuqsAdapter>{children}</NuqsAdapter>
+            <FeedbackWidget />
+            <Analytics />
+          </HowItWorksProvider>
+        </AuthProvider>
       </body>
     </html>
   );
