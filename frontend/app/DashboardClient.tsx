@@ -19,9 +19,11 @@ const PAGE_SIZE = 20;
 interface Props {
   /** First page of properties pre-fetched on the server — skips the initial client-side fetch. */
   initialData?: PropertyListResponse | null;
+  /** Commune list pre-fetched on the server — eliminates the empty dropdown flash. */
+  initialCommunes?: string[];
 }
 
-export default function DashboardClient({ initialData }: Props) {
+export default function DashboardClient({ initialData, initialCommunes }: Props) {
   const { setOpen } = useHowItWorks();
   const [filters] = useFilters();
 
@@ -186,7 +188,7 @@ export default function DashboardClient({ initialData }: Props) {
 
   return (
     <div className="flex flex-col gap-3 min-h-0">
-      <FilterBar />
+      <FilterBar initialCommunes={initialCommunes} />
 
       {/* Stats bar */}
       {total != null && (

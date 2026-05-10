@@ -18,12 +18,18 @@ interface Props {
   usefulAreaM2?: number | null;
   compsCount?: number;
   compsMedianRent?: number | null;
+  /** Live cap rate computed from current IQR-filtered comps. When provided,
+   *  overrides btl.gross_yield_pct so all numbers on the detail page are consistent. */
+  liveCapRate?: number | null;
   reviewTrigger?: ReactNode;
   narrativeText?: string;
 }
 
-export default function BTLSummary({ btl, price_clp, price_uf, usefulAreaM2, compsCount, compsMedianRent, reviewTrigger, narrativeText }: Props) {
-  if (!btl || btl.gross_yield_pct == null) {
+export default function BTLSummary({ btl, price_clp, price_uf, usefulAreaM2, compsCount, compsMedianRent, liveCapRate, reviewTrigger, narrativeText }: Props) {
+  // Use live cap rate when provided (detail page); fall back to DB value (other contexts).
+  const grossYield = liveCapRate !== undefined ? liveCapRate : (btl?.gross_yield_pct ?? null);
+
+  if (!btl || grossYield == null) {
     return (
       <div className="rounded-xl border border-gray-200 p-6 text-center text-sm text-gray-400">
         Sin análisis BTL disponible — necesita arriendo estimado.
@@ -31,13 +37,8 @@ export default function BTLSummary({ btl, price_clp, price_uf, usefulAreaM2, com
     );
   }
 
-  // Estimated rent: live-computed from IQR-filtered displayed comps (fresher than DB).
-  // Cap rate: always use the stored DB value so dashboard and detail page show the
-  // same number. The DB value is kept in sync by POST /analysis/recalculate which
-  // also applies IQR, so both figures are consistent after each run.
   const estimatedRent = compsMedianRent ?? btl.estimated_monthly_rent_clp;
   const annualRent = estimatedRent ? estimatedRent * 12 : null;
-  const grossYield = btl.gross_yield_pct;
   const yieldBand = grossYield >= 7 ? "excellent" : grossYield >= 5 ? "good" : grossYield >= 3 ? "moderate" : "weak";
   const style = bandStyle[yieldBand];
 

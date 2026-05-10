@@ -209,13 +209,16 @@ export default async function PropertyDetailPage({ params }: Props) {
 
   const hasLocation = property.lat != null && property.lng != null;
 
-  // Use the stored DB cap rate so dashboard and detail page always show the
-  // same number. The DB value is updated (with IQR) by /analysis/recalculate.
-  const capRate = property.btl?.gross_yield_pct ?? null;
+  // Live cap rate: computed from current IQR-filtered comps, same formula as ReviewPanel.
+  // Null when there are no comps — consistent with "no analysis available" state.
+  const liveCapRate =
+    compsMedianRent != null && property.price_clp && property.price_clp > 0
+      ? (compsMedianRent * 12 / property.price_clp) * 100
+      : null;
 
-  const cta = buildCtaTier(capRate, vsZona, property.commune);
+  const cta = buildCtaTier(liveCapRate, vsZona, property.commune);
 
-  const narrativeText = buildNarrativeText(capRate, vsZona, property.commune);
+  const narrativeText = buildNarrativeText(liveCapRate, vsZona, property.commune);
 
   return (
     <>
@@ -331,6 +334,7 @@ export default async function PropertyDetailPage({ params }: Props) {
               usefulAreaM2={property.useful_area_m2}
               compsCount={filteredComps.length}
               compsMedianRent={compsMedianRent}
+              liveCapRate={liveCapRate}
               narrativeText={narrativeText}
               reviewTrigger={
                 <ReviewPanel

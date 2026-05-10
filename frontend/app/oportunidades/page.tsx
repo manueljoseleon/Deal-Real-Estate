@@ -32,21 +32,28 @@ export default async function OportunidadesPage({ searchParams }: PageProps) {
   const min_yield = typeof params.min_yield === "string" ? parseFloat(params.min_yield) : 0;
   const sort_by = typeof params.sort_by === "string" ? params.sort_by : "yield_desc";
 
-  // Prefetch the first page server-side — eliminates the blank loading flash
+  // Prefetch first page + communes server-side — eliminates loading flashes
   let initialData: PropertyListResponse | null = null;
+  let initialCommunes: string[] = [];
   try {
-    initialData = await api.properties.list({
-      commune: commune.length ? commune : undefined,
-      property_type: property_type || undefined,
-      bedrooms: bedrooms ? parseInt(bedrooms) : undefined,
-      min_yield: min_yield || undefined,
-      sort_by,
-      page: 1,
-      page_size: 20,
-    });
+    const [listResult, communesResult] = await Promise.all([
+      api.properties.list({
+        commune: commune.length ? commune : undefined,
+        property_type: property_type || undefined,
+        bedrooms: bedrooms ? parseInt(bedrooms) : undefined,
+        min_yield: min_yield || undefined,
+        sort_by,
+        page: 1,
+        page_size: 20,
+      }),
+      api.mercado.communes(),
+    ]);
+    initialData = listResult;
+    initialCommunes = communesResult.communes;
   } catch {
     // If backend is down during SSR, fall back to client-side fetch gracefully
     initialData = null;
+    initialCommunes = [];
   }
 
   return (
@@ -77,7 +84,7 @@ export default async function OportunidadesPage({ searchParams }: PageProps) {
       </div>
 
       <Suspense fallback={<div className="text-center py-16 text-gray-400 text-sm">Cargando…</div>}>
-        <DashboardClient initialData={initialData} />
+        <DashboardClient initialData={initialData} initialCommunes={initialCommunes} />
       </Suspense>
     </main>
   );

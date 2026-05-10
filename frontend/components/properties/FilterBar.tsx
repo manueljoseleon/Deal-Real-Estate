@@ -30,12 +30,19 @@ export function useFilters() {
   return useQueryStates(filterParsers, { shallow: true });
 }
 
-export default function FilterBar() {
+interface FilterBarProps {
+  initialCommunes?: string[];
+}
+
+export default function FilterBar({ initialCommunes }: FilterBarProps) {
   const [filters, setFilters] = useFilters();
-  const [communeOptions, setCommuneOptions] = useState<string[]>([]);
+  const [communeOptions, setCommuneOptions] = useState<string[]>(initialCommunes ?? []);
 
   useEffect(() => {
+    // Only fetch if not seeded from SSR
+    if (initialCommunes && initialCommunes.length > 0) return;
     api.mercado.communes().then((r) => setCommuneOptions(r.communes));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
